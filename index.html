@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#103e35" />
+    <title>Fundamentos de Economía · MBA Training</title>
+    <link rel="icon" href="assets/marca.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="aula.css" />
+    <script defer src="data/curso.js"></script>
+    <script defer src="data/referencias.js"></script>
+    <script defer src="documento.js"></script>
+    <script defer src="aula.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Saltar al contenido</a>
+    <aside id="sidebar" aria-label="Navegación del cuaderno">
+      <div class="identity">
+        <a href="#inicio"
+          ><img src="assets/marca.svg" width="40" height="40" alt="" /><span
+            >MBA Training<small>AULA DE ESTUDIO</small></span
+          ></a
+        ><button
+          id="close-nav"
+          class="icon-btn mobile"
+          aria-label="Cerrar menú"
+        >
+          ×
+        </button>
+      </div>
+      <nav id="navigation" aria-label="Curso"></nav>
+      <div class="side-foot">
+        <span data-icon="save"></span>
+        <div>
+          <strong>Cuaderno personal</strong
+          ><small>Guardado en este navegador</small>
+        </div>
+      </div>
+    </aside>
+    <button id="shade" aria-label="Cerrar menú" hidden></button>
+    <div class="shell">
+      <header class="topbar">
+        <button
+          id="open-nav"
+          class="icon-btn mobile"
+          aria-label="Abrir menú"
+          aria-controls="sidebar"
+          aria-expanded="false"
+          data-icon="menu"
+        ></button>
+        <div id="crumb"></div>
+        <a
+          class="quiet pdf-link"
+          aria-label="Abrir compendio a color en PDF"
+          href="assets/compendio-color.pdf"
+          target="_blank"
+          rel="noopener"
+          ><span data-icon="book"></span
+          ><span class="pdf-full">Compendio PDF</span
+          ><span class="pdf-short">PDF</span></a
+        >
+      </header>
+      <div id="save-warning" role="alert" hidden></div>
+      <main id="main" tabindex="-1"></main>
+    </div>
+    <dialog id="figure-dialog" aria-label="Gráfico ampliado">
+      <button class="icon-btn close-dialog" aria-label="Cerrar gráfico">
+        ×
+      </button>
+      <div class="zoom-area"><img alt="" /></div>
+    </dialog>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <noscript
+      >Activa JavaScript para utilizar el cuaderno. También puedes
+      <a href="assets/compendio-color.pdf">abrir el compendio a color</a
+      >.</noscript
+    >
+  </body>
+</html>
