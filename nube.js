@@ -25,6 +25,8 @@
     try {
       const response = await fetch("/api/" + path, {
         method, headers, credentials: "same-origin", mode: "same-origin", cache: "no-store",
+        // Firefox necesita esta política para enviar Origin en escrituras a la API.
+        referrerPolicy: "same-origin",
         redirect: "error", signal: controller.signal,
         body: data === undefined ? undefined : JSON.stringify(data)
       });
