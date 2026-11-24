@@ -23,16 +23,22 @@ COOKIE_ATTRIBUTES = "; Path=/; HttpOnly; Secure; SameSite=Lax"
 DUMMY_PASSWORD = store.encode_password(secrets.token_hex(32))
 
 
+def read_catalog_file(name):
+    src = (Path(__file__).resolve().parents[1] / "data" / name).read_text(encoding="utf8")
+    return json.loads(src.split("=", 1)[1].strip().rstrip(";"))
+
+
 def load_catalog():
-    src = (Path(__file__).resolve().parents[1] / "data" / "curso.js").read_text(encoding="utf8")
-    modules = json.loads(src.split("=", 1)[1].strip().rstrip(";"))
     units = set()
     questions = {}
-    for module in modules:
+    for module in read_catalog_file("curso.js"):
         for item in module["items"]:
             if item.get("questions"):
                 units.add(item["id"])
                 questions.update({q["id"]: q for q in item["questions"]})
+    for final in read_catalog_file("finales.js"):
+        units.add(final["id"])
+        questions[final["id"]] = final
     return units, questions
 
 
@@ -151,7 +157,8 @@ def save_draft(db, user, qid, data):
     mode, text, choice, rev = (data.get(key) for key in ("mode", "text", "choice", "revision"))
     if (mode not in ("texto", "eleccion") or not isinstance(text, str) or len(text) > TEXT_LIMIT
             or not isinstance(choice, str) or (choice and choice not in q.get("options", []))
-            or (q["type"] == "desarrollo" and mode != "texto") or type(rev) is not int or not 0 <= rev < 2**53):
+            or (q["type"] == "desarrollo" and mode != "texto")
+            or (q["type"] == "final" and mode != "eleccion") or type(rev) is not int or not 0 <= rev < 2**53):
         raise Denied(422, "invalid_draft")
     current = db.execute("SELECT mode,text,choice,revision FROM drafts WHERE user_id=? AND qid=?",
                          (user, qid)).fetchone()

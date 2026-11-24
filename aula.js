@@ -68,7 +68,11 @@
   const modLink = (n) => "#modulo/" + n;
   const items = new Map(),
     questions = new Map();
+  const moduleFinals = new Map(window.FINALES.map((q) => [q.module, q]));
   for (const m of modules) {
+    const final = moduleFinals.get(m.number);
+    m.items.push({ id: final.id, title: "Pregunta final del módulo " + m.number,
+      questions: [final], isFinal: true });
     m.questions = [];
     for (const a of m.items) {
       items.set(a.id, { a, m });
@@ -105,7 +109,7 @@
   function normalized(q, obj) {
     return {
       mode:
-        q.type === "desarrollo" || obj?.mode === "texto" ? "texto" : "eleccion",
+        q.type === "desarrollo" || (q.type === "comprension" && obj?.mode === "texto") ? "texto" : "eleccion",
       text: typeof obj?.text === "string" ? obj.text : "",
       choice: q.options?.includes(obj?.choice) ? obj.choice : "",
     };
@@ -136,15 +140,18 @@
   }
   const done = (list) => list.reduce((n, q) => n + Boolean(response(q)), 0);
   const answered = () => done([...questions.values()]);
+  function reference(q) {
+    return q.type === "final" ? q.options[q.correctIndex] : window.REFERENCIAS[q.id];
+  }
   function choiceGrade(q) {
     const d = draft(q);
-    if (q.type !== "comprension" || d.mode !== "eleccion" || !d.choice) return null;
-    return d.choice === window.REFERENCIAS[q.id];
+    if (!q.options || d.mode !== "eleccion" || !d.choice) return null;
+    return d.choice === reference(q);
   }
   function scoreSummary() {
     let aciertos = 0, errores = 0, escritas = 0, maximo_curso = 0;
     for (const q of questions.values()) {
-      if (q.type === "comprension") maximo_curso++;
+      if (q.options) maximo_curso++;
       const grade = choiceGrade(q);
       if (grade === true) aciertos++;
       else if (grade === false) errores++;
@@ -250,7 +257,7 @@
     );
   }
   function card(m) {
-    const count = m.items.filter((a) => a.questions).length,
+    const count = m.items.filter((a) => a.questions && !a.isFinal).length,
       finished = done(m.questions);
     return (
       '<a class="module-card" href="' +
@@ -314,7 +321,7 @@
     crumb("Vista general");
     const last = items.get(lastId)?.a;
     main.innerHTML =
-      '<section class="hero"><div><p class="eyebrow">Economía · CV-0303</p><h1>Fundamentos<br>de Economía</h1><p class="hero-sub">11 módulos · 102 apartados de estudio · 612 preguntas</p><a class="button light" href="' +
+      `<section class="hero"><div><p class="eyebrow">Economía · CV-0303</p><h1>Fundamentos<br>de Economía</h1><p class="hero-sub">${modules.length} módulos · 102 apartados de estudio · ${questions.size} preguntas</p><a class="button light" href="` +
       (last?.questions ? link(last) : modLink(modules[0].number)) +
       '">' +
       icon("book") +
@@ -361,8 +368,9 @@
       isLong = q.type === "desarrollo";
     const qid = esc(q.id),
       titleId = "title-" + qid;
+    const heading = q.type === "final" ? "h3" : "h4";
     let field = "";
-    if (!isLong) {
+    if (q.type === "comprension") {
       field =
         '<div class="mode-switch" role="group" aria-label="Forma de responder"><button type="button" data-mode="eleccion" aria-pressed="' +
         (d.mode === "eleccion") +
@@ -404,7 +412,7 @@
               '" ' +
               (d.choice === opt ? "checked" : "") +
               "><span>" +
-              esc(opt) +
+              esc(q.type === "final" ? optionLabel(q, k) : opt) +
               "</span></label>",
           )
           .join("") +
@@ -413,7 +421,6 @@
         field +=
           '<button class="plain" data-clear-choice>Quitar selección</button>';
     }
-    const reference = window.REFERENCIAS[q.id];
     const label = isLong ? "modelo de respuesta" : "respuesta correcta";
     const grade = choiceGrade(q);
     const verdict = grade !== null
@@ -425,28 +432,51 @@
       '<details class="question-solution"' + (solutionOpen ? " open" : "") + '>' +
       '<summary><span class="when-closed">Ver ' + label + '</span>' +
       '<span class="when-open">Ocultar ' + label + '</span></summary>' +
-      '<div class="solution-content">' + verdict + '<p>' + esc(reference) +
-      '</p></div></details>';
+      '<div class="solution-content">' + verdict + answerMarkup(q) + '</div></details>';
     return (
       '<article class="q-card" data-q="' +
       qid +
       '"><span class="eyebrow">' +
-      (isLong ? "Pregunta de desarrollo" : "Comprensión · " + num + " de 5") +
-      '</span><h4 id="' +
+      questionLabel(q, num) +
+      '</span>' + caseMarkup(q) + '<' + heading + ' id="' +
       titleId +
       '">' +
       esc(q.prompt) +
-      "</h4>" +
+      "</" + heading + ">" +
       field +
       solution +
       "</article>"
     );
+  }
+  function optionLabel(q, k) {
+    return String.fromCharCode(65 + k) + ". " + q.options[k];
+  }
+  function questionLabel(q, num) {
+    if (q.type === "final") return "Caso integrador · Elige una opción";
+    return q.type === "desarrollo" ? "Pregunta de desarrollo" : "Comprensión · " + num + " de 5";
+  }
+  function caseMarkup(q) {
+    return q.case ? '<div class="case-text">' + paragraphs(q.case) + '</div>' : "";
+  }
+  function paragraphs(text) {
+    return text.split(/\n\s*\n/).map((p) => "<p>" + esc(p) + "</p>").join("");
+  }
+  function answerMarkup(q) {
+    if (q.type !== "final") return '<p class="answer-preview">' + esc(reference(q)) + '</p>';
+    return '<p class="answer-preview"><strong>' + esc(optionLabel(q, q.correctIndex)) +
+      '</strong></p><div class="case-reason">' + paragraphs(q.explanation) + '</div>';
+  }
+  function unitCount(a) {
+    if (a.isFinal) return done(a.questions) ? "Respondida" : "Pendiente";
+    return done(a.questions) + " de " + a.questions.length + " respondidas";
   }
   function unitSection(a) {
     const opening = `<section class="study-unit${a.questions ? "" : " unit-note"}"
       id="apartado-${esc(encodeURIComponent(a.id))}" data-unit="${esc(a.id)}" tabindex="-1">
       <h2 class="unit-title">${esc(itemName(a))}</h2>`;
     if (!a.questions) return opening + "<p>" + esc(a.note) + "</p></section>";
+    if (a.isFinal) return opening + '<span class="meta" data-unit-progress aria-live="polite">' +
+      unitCount(a) + '</span>' + questionCard(a.questions[0], 1) + '</section>';
     return opening +
       '<div class="meta">Compendio, p. ' +
       a.page +
@@ -485,8 +515,7 @@
         : "") +
       "</section>" +
       '<section class="practice"><div class="section-head"><h3>Preguntas del apartado</h3><span class="meta" data-unit-progress aria-live="polite">' +
-      done(a.questions) +
-      " de " + a.questions.length + " respondidas</span></div>" +
+      unitCount(a) + "</span></div>" +
       a.questions.map((q, k) => questionCard(q, k + 1)).join("") +
       "</section></section>";
   }
@@ -524,11 +553,15 @@
               modalidad: value ? d.mode : null,
               respuesta: value || null,
             };
+            if (q.case) row.caso = q.case;
+            if (q.type === "final" || (value && d.mode === "eleccion")) row.opciones = q.options;
             if (value && d.mode === "eleccion") {
-              row.opciones = q.options;
               row.correcta = choiceGrade(q);
             }
-            if (includeModels) row.referencia = window.REFERENCIAS[q.id];
+            if (includeModels) {
+              row.referencia = reference(q);
+              if (q.explanation) row.explicacion = q.explanation;
+            }
             return row;
           }),
         });
@@ -571,7 +604,7 @@
                   .filter((q) => showPending || response(q))
                   .map(
                     (q) =>
-                      "<h4>" +
+                      caseMarkup(q) + "<h4>" +
                       esc(q.prompt) +
                       '</h4><div class="answer-preview">' +
                       (response(q)
@@ -606,7 +639,7 @@
           if (row.respuesta === null && row.modalidad === null) { pending++; continue; }
           const choice = row.modalidad === "eleccion";
           if (typeof row.respuesta !== "string" || !row.respuesta.trim() || (!choice && [...row.respuesta].length > 32000) ||
-              (choice ? !q.options?.includes(row.respuesta) : row.modalidad !== "texto"))
+              (choice ? !q.options?.includes(row.respuesta) : row.modalidad !== "texto" || q.type === "final"))
             throw new Error("La respuesta de " + q.id + " no corresponde al tipo de pregunta o a sus opciones.");
           if (drafts.has(q.id)) { existing++; continue; }
           ready.push([q, choice
@@ -734,11 +767,12 @@
   function solutionSection(a) {
     const answers = a.questions.map((q, i) => {
       const isEssay = q.type === "desarrollo";
-      const questionLabel = isEssay ? "Pregunta de desarrollo" : `Comprensión · ${i + 1} de 5`;
+      const options = q.type === "final" ? '<ol type="A" class="case-options">' +
+        q.options.map((opt) => "<li>" + esc(opt) + "</li>").join("") + "</ol>" : "";
       return `<article class="q-card" data-solution-id="${esc(q.id)}">
-        <span class="eyebrow">${questionLabel}</span><h3>${esc(q.prompt)}</h3>
+        <span class="eyebrow">${q.type === "final" ? "Caso integrador" : questionLabel(q, i + 1)}</span>${caseMarkup(q)}<h3>${esc(q.prompt)}</h3>${options}
         <strong>${isEssay ? "Modelo de respuesta" : "Respuesta correcta"}</strong>
-        <p class="answer-preview">${esc(window.REFERENCIAS[q.id])}</p>
+        ${answerMarkup(q)}
       </article>`;
     }).join("");
     return `<section class="study-unit" id="solucion-${esc(encodeURIComponent(a.id))}" tabindex="-1" aria-labelledby="solucion-titulo-${esc(a.id)}">
@@ -760,9 +794,10 @@
     const position = modules.indexOf(m);
     const previous = modules[position - 1], next = modules[position + 1];
     const essays = m.questions.filter((q) => q.type === "desarrollo").length;
+    const comprehension = m.questions.filter((q) => q.type === "comprension").length;
     main.innerHTML = `<div class="eyebrow kicker">Solucionario · Módulo ${m.number}</div>
       <h1 class="page-title">${esc(m.title)}</h1>
-      <p>${m.questions.length - essays} respuestas de comprensión · ${essays} modelos de desarrollo</p>
+      <p>${comprehension} respuestas de comprensión · ${essays} modelos de desarrollo · 1 pregunta final resuelta</p>
       <label class="section-menu"><span class="meta">Módulo</span><select data-solution-select>${moduleOptions}</select></label>
       <div class="module-index"><label class="section-menu"><span>Ir a un apartado</span><select data-solution-jump><option value="">Seleccionar apartado</option>${sectionOptions}</select></label></div>
       ${sections.map(solutionSection).join("")}
@@ -849,7 +884,7 @@
     const section = card.closest("[data-unit]");
     const { a, m } = items.get(section.dataset.unit);
     const counter = $("[data-unit-progress]", section);
-    const label = done(a.questions) + " de " + a.questions.length + " respondidas";
+    const label = unitCount(a);
     if (counter.textContent === label) return;
     counter.textContent = label;
     const count = done(m.questions);

@@ -79,6 +79,25 @@ class CourseApiTests(unittest.TestCase):
         self.assertEqual(self.req("GET","/api/state",cookie=a)[0],401)
         self.assertEqual(self.req("GET","/api/session",cookie=a)[1],{"user":None})
 
+    def test_module_finals_use_the_same_account_and_scoreable_choices(self):
+        finals = [q for q in app.QUESTIONS.values() if q["type"] == "final"]
+        self.assertCountEqual([q["module"] for q in finals], range(1, 12))
+        cookie = self.login("estudiante")
+        self.assertEqual(self.req("PUT", self.url, self.payload, cookie)[0], 200)
+        for q in finals:
+            with self.subTest(module=q["module"]):
+                self.assertEqual(len(set(q["options"])), 4)
+                correct = q["options"][q["correctIndex"]]
+                payload = dict(mode="eleccion", text="", choice=correct, revision=0)
+                url = "/api/drafts/" + q["id"]
+                self.assertEqual(self.req("PUT", url, dict(payload, mode="texto"), cookie)[0], 422)
+                self.assertEqual(self.req("PUT", url, payload, cookie)[0], 200)
+                self.assertEqual(self.req("PUT", "/api/last", {"lastId": q["id"]}, cookie)[0], 200)
+        state = self.req("GET", "/api/state", cookie=cookie)[1]
+        self.assertEqual(len(state["drafts"]), len(finals) + 1)
+        for q in finals:
+            self.assertEqual(state["drafts"][q["id"]]["choice"], q["options"][q["correctIndex"]])
+
     def test_stale_write_returns_winner_and_retry_is_idempotent(self):
         cookie=self.login("ana")
         def write(text):

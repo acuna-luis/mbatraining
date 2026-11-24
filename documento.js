@@ -113,27 +113,18 @@
     for (const m of report.modulos) {
       body.push(para("Módulo " + m.numero + " · " + m.titulo, "H1"));
       for (const a of m.apartados) {
-        body.push(
-          para(a.numero + ". " + a.titulo, "H2"),
-          para(
-            "Compendio, p. " +
-              a.pagina_compendio +
-              " · Lectura de origen, pp. " +
-              a.paginas_origen,
-            "Meta",
-          ),
-        );
+        body.push(para(a.pagina_compendio ? a.numero + ". " + a.titulo : a.titulo, "H2"));
+        if (a.pagina_compendio) {
+          body.push(para(`Compendio, p. ${a.pagina_compendio} · Lectura de origen, pp. ${a.paginas_origen}`, "Meta"));
+        }
         for (const q of a.preguntas) {
-          body.push(
-            para(q.id + " · " + q.enunciado, "Question"),
-            para(
-              q.respuesta === null
-                ? "Pendiente"
-                : (q.modalidad === "eleccion"
-                    ? "Opción elegida: "
-                    : "Respuesta escrita: ") + q.respuesta,
-            ),
-          );
+          if (q.caso) body.push(para(q.caso));
+          body.push(para(q.id + " · " + q.enunciado, "Question"));
+          if (q.tipo === "final") q.opciones.forEach((option, index) => {
+            body.push(para(String.fromCharCode(65 + index) + ". " + option));
+          });
+          const respuesta = q.modalidad === "eleccion" ? "Opción elegida: " : "Respuesta escrita: ";
+          body.push(para(q.respuesta === null ? "Pendiente" : respuesta + q.respuesta));
         }
       }
     }
@@ -146,9 +137,11 @@
       );
       for (const m of report.modulos)
         for (const a of m.apartados) {
-          body.push(para(a.numero + ". " + a.titulo, "H2"));
-          for (const q of a.preguntas)
+          body.push(para(a.pagina_compendio ? a.numero + ". " + a.titulo : a.titulo, "H2"));
+          for (const q of a.preguntas) {
             body.push(para(q.id + " · " + q.referencia));
+            if (q.explicacion) body.push(para(q.explicacion));
+          }
         }
     }
     const style = (id, size, bold, color, space, heading = false) =>

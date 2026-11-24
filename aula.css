@@ -1095,10 +1095,24 @@ dialog::backdrop {
   margin: 0;
   max-width: 80ch;
 }
+.solution-content .answer-preview {
+  border: 0;
+  padding: 0;
+}
 .choice-verdict {
   display: block;
   margin-bottom: .35rem;
   color: var(--ink);
+}
+.case-text, .case-reason, .case-options {
+  max-width: 82ch;
+  line-height: 1.65;
+}
+.case-text p, .case-reason p, .case-options li {
+  margin: .55rem 0;
+}
+.case-options {
+  padding-left: 1.6rem;
 }
 
 body.account-locked .shell, body.account-locked #sidebar, body.account-locked .skip, body.account-locked #shade { display:none !important; }
