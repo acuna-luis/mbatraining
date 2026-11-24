@@ -1,0 +1,8 @@
+[Unit]
+Description=Renovar el certificado HTTPS de la IP del aula
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/mbatraining/venv/bin/certbot renew --quiet --cert-name mbatraining-ip --config-dir /etc/mbatraining/acme --work-dir /var/lib/mbatraining-acme --logs-dir /var/log/mbatraining-acme --deploy-hook "/usr/sbin/nginx -t && /usr/bin/systemctl reload nginx"

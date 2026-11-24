@@ -1028,3 +1028,24 @@ dialog::backdrop {
   margin-bottom: .35rem;
   color: var(--ink);
 }
+
+body.account-locked .shell, body.account-locked #sidebar, body.account-locked .skip, body.account-locked #shade { display:none !important; }
+.auth-screen { min-height:100vh; min-height:100dvh; padding:24px; display:grid; place-items:center; background:var(--paper); color:var(--ink); }
+.auth-card { width:min(100%,420px); padding:clamp(20px,5vw,40px); background:white; border:1px solid var(--line); border-radius:15px; }
+.auth-card .eyebrow { margin:18px 0 5px; color:var(--green); }
+.auth-title { font:500 2.75rem/1.08 var(--serif); letter-spacing:-.04em; margin:0; }
+.auth-card form { display:grid; gap:14px; margin-top:20px; }
+.auth-card label { display:grid; gap:5px; font-size:.95rem; font-weight:600; }
+.auth-card input { width:100%; border:1px solid #acbdb2; padding:10px; color:var(--ink); background:white; border-radius:6px; }
+.auth-card fieldset { border:1px solid var(--line); border-radius:7px; padding:12px; min-width:0; }
+.auth-card fieldset label+label { margin-top:10px; }
+.auth-card #auth-status:empty { display:none; }
+#account-tools { flex:0 0 auto; }
+.topbar:has(#account-tools:not([hidden])) .pdf-link { margin-left:auto; }
+#save-warning details { margin:8px 0; }
+#save-warning details p { white-space:pre-wrap; overflow-wrap:anywhere; max-height:190px; overflow:auto; }
+#save-warning .quiet { margin:6px 8px 4px 0; }
+@media(max-width:580px){ .topbar:has(#account-tools:not([hidden])) { gap:6px; } }
+
+#mobile-account {display:none}
+@media(max-width:880px){ #mobile-account:not([hidden]) {display:block;font-size:.83rem;color:var(--muted);padding:5px 14px;text-align:right;border-bottom:1px solid var(--line);background:white} }

@@ -10,9 +10,29 @@
     <script defer src="data/curso.js"></script>
     <script defer src="data/referencias.js"></script>
     <script defer src="documento.js"></script>
+    <script defer src="nube.js"></script>
     <script defer src="aula.js"></script>
   </head>
   <body>
+    <section id="auth-screen" class="auth-screen" hidden aria-labelledby="auth-title">
+      <div class="auth-card">
+        <img src="assets/marca.svg" alt="MBA Training" width="44" height="44">
+        <p class="eyebrow">Fundamentos de Economía</p>
+        <h1 id="auth-title" class="auth-title">Iniciar sesión</h1>
+        <p>Entra para continuar con tus respuestas guardadas.</p>
+        <form id="auth-form">
+          <label>Usuario<input id="auth-name" type="text" required autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="80"></label>
+          <label>Contraseña<input id="auth-pass" type="password" required autocomplete="current-password"></label>
+          <fieldset id="auth-initial" hidden><legend>Activa tu cuenta</legend>
+            <label>Código de activación<input id="auth-token" type="password" autocomplete="off"></label>
+            <label>Nueva contraseña (mínimo 12 caracteres)<input id="auth-new" type="password" autocomplete="new-password" minlength="12"></label>
+          </fieldset>
+          <button id="auth-submit" class="button" type="submit">Entrar</button>
+        </form>
+        <p id="auth-status" role="status" aria-live="polite"></p>
+        <button id="auth-retry" class="quiet" type="button" hidden>Volver a conectar</button>
+      </div>
+    </section>
     <a class="skip" href="#main">Saltar al contenido</a>
     <aside id="sidebar" aria-label="Navegación del cuaderno">
       <div class="identity">
@@ -32,8 +52,8 @@
       <div class="side-foot">
         <span data-icon="save"></span>
         <div>
-          <strong>Cuaderno personal</strong
-          ><small>Guardado en este navegador</small>
+          <strong id="account-user">Cuaderno personal</strong
+          ><small id="account-save" role="status">Guardado en este navegador</small>
         </div>
       </div>
     </aside>
@@ -59,7 +79,9 @@
           ><span class="pdf-full">Compendio PDF</span
           ><span class="pdf-short">PDF</span></a
         >
+        <div id="account-tools" hidden><button id="account-logout" type="button" class="quiet">Salir</button></div>
       </header>
+      <div id="mobile-account" hidden></div>
       <div id="save-warning" role="alert" hidden></div>
       <main id="main" tabindex="-1"></main>
     </div>

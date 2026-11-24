@@ -82,6 +82,15 @@
       }
     }
   }
+  const cloud = window.nube;
+  if (location.protocol !== "file:" && !cloud) {
+    document.body.classList.add("account-locked");
+    $("#auth-screen").hidden = false;
+    $("#auth-form").hidden = true;
+    $("#auth-status").textContent =
+      "No se pudo cargar el acceso a tu cuenta. Recarga la página para volver a intentarlo.";
+    return;
+  }
   const prefix = "mba.economia.cv0303.v1.";
   const drafts = new Map();
   let lastId = "",
@@ -103,7 +112,7 @@
       choice: q.options?.includes(obj?.choice) ? obj.choice : "",
     };
   }
-  try {
+  if (!cloud) try {
     localStorage.setItem(prefix + "test", "1");
     localStorage.removeItem(prefix + "test");
     lastId = localStorage.getItem(prefix + "ultimo") || "";
@@ -164,6 +173,7 @@
   }
   function save(q, d) {
     drafts.set(q.id, d);
+    if (cloud) { cloud.save(q.id, d); return; }
     try {
       localStorage.setItem(prefix + "r." + q.id, JSON.stringify(d));
     } catch {
@@ -171,7 +181,9 @@
     }
   }
   function remember(id) {
+    if (id === lastId) return;
     lastId = id;
+    if (cloud) { cloud.remember(id); return; }
     try {
       localStorage.setItem(prefix + "ultimo", id);
     } catch {
@@ -388,7 +400,7 @@
         (isLong
           ? "Desarrolla tu respuesta en unas 100 palabras."
           : "Tu respuesta escrita") +
-        '</label><textarea class="answer-text ' +
+        '</label><textarea maxlength="32000" class="answer-text ' +
         (isLong ? "long-answer" : "") +
         '" id="text-' +
         qid +
@@ -648,6 +660,76 @@
       )
       .join("");
   }
+  function readImportedAnswers(data) {
+    if (data?.version !== 1 || data.codigo !== "CV-0303" ||
+        data.curso !== "Fundamentos de Economía" || !Array.isArray(data.modulos))
+      throw new Error("Elige un JSON de respuestas de este curso.");
+    const ready = [], seen = new Set();
+    let pending = 0, existing = 0;
+    for (const module of data.modulos) {
+      if (!Array.isArray(module?.apartados)) throw new Error("El índice del archivo es incorrecto.");
+      for (const unit of module.apartados) {
+        const current = items.get(unit?.numero);
+        if (!current?.a.questions || current.m.number !== module.numero || !Array.isArray(unit.preguntas))
+          throw new Error("El archivo contiene un apartado que no corresponde al curso.");
+        for (const row of unit.preguntas) {
+          const q = questions.get(row?.id);
+          if (!q || !current.a.questions.includes(q) || row.tipo !== q.type || seen.has(q.id))
+            throw new Error("El archivo contiene una pregunta desconocida, repetida o mal ubicada.");
+          seen.add(q.id);
+          if (row.respuesta === null && row.modalidad === null) { pending++; continue; }
+          const choice = row.modalidad === "eleccion";
+          if (typeof row.respuesta !== "string" || !row.respuesta.trim() || (!choice && [...row.respuesta].length > 32000) ||
+              (choice ? !q.options?.includes(row.respuesta) : row.modalidad !== "texto"))
+            throw new Error("La respuesta de " + q.id + " no corresponde al tipo de pregunta o a sus opciones.");
+          if (drafts.has(q.id)) { existing++; continue; }
+          ready.push([q, choice
+            ? {mode:"eleccion", text:"", choice:row.respuesta}
+            : {mode:"texto", text:row.respuesta, choice:""}]);
+        }
+      }
+    }
+    return {ready, pending, existing};
+  }
+  function attachImport(panel) {
+    const fileInput = panel.querySelector('input[type=file]');
+    const preview = panel.querySelector('[role=status]');
+    const confirm = panel.querySelector('button');
+    let ready = [];
+    fileInput.addEventListener("change", async () => {
+      ready = [];
+      confirm.disabled = true;
+      preview.textContent = "";
+      const file = fileInput.files[0];
+      if (!file) return;
+      try {
+        if (file.size > 128 * 1024 * 1024) throw new Error("El archivo supera el límite de 128 MiB.");
+        const contents = await file.text();
+        if (!panel.isConnected || fileInput.files[0] !== file) return;
+        const result = readImportedAnswers(JSON.parse(contents));
+        ready = result.ready;
+        preview.textContent = "Respuestas para añadir: " + ready.length +
+          ". Preguntas que ya tienen un borrador en esta cuenta: " + result.existing +
+          ". Preguntas pendientes en el archivo: " + result.pending + ".";
+        confirm.disabled = ready.length === 0;
+      } catch (error) {
+        if (panel.isConnected && fileInput.files[0] === file)
+          preview.textContent = error instanceof SyntaxError ? "El archivo no contiene JSON válido." : error.message;
+      }
+    });
+    confirm.addEventListener("click", () => {
+      if (!panel.isConnected || !window.nube?.ready || !ready.length) return;
+      confirm.disabled = true;
+      let added = 0;
+      for (const [q, d] of ready) {
+        if (drafts.has(q.id)) continue;
+        save(q, d);
+        added++;
+      }
+      review();
+      notice("Se han añadido " + added + " respuestas al cuaderno.");
+    });
+  }
   function review() {
     nav("answers");
     crumb("Mis respuestas");
@@ -657,7 +739,7 @@
       count +
       " de " +
       questions.size +
-      ' preguntas respondidas en este navegador.</p>' +
+      ' preguntas respondidas.</p>' +
       scorePanel() +
       '<section class="panel"><h2>Descargar respuestas</h2><p>El documento reúne tus respuestas con su enunciado, módulo y apartado. Puedes compartirlo con la IA que elijas para la corrección.</p>' +
       '<label class="export-options"><input type="checkbox" id="models" ' +
@@ -674,9 +756,19 @@
       ">" +
       icon("download") +
       "Descargar JSON</button></div></section>" +
+      (window.nube?.ready ? `<section class="panel" id="import-answers">
+        <h2>Importar respuestas anteriores</h2>
+        <p>Elige el JSON descargado desde tu cuaderno local. Se añadirán las respuestas a preguntas que aún no tienen borrador en esta cuenta.</p>
+        <label class="field-label" for="import-file">Archivo de respuestas (.json)</label>
+        <input type="file" id="import-file" accept=".json,application/json">
+        <p role="status" aria-live="polite"></p>
+        <button type="button" class="button line" disabled>Confirmar importación</button>
+      </section>` : "") +
       '<section class="panel"><h2>Revisar por módulo</h2><div id="review-outline">' +
       reviewOutline() +
       "</div></section>";
+    const importPanel = $("#import-answers");
+    if (importPanel) attachImport(importPanel);
   }
   function download(format) {
     const doc = report();
@@ -767,6 +859,7 @@
     return { page: page === "respuestas" ? "respuestas" : "inicio" };
   }
   function render(focus = false) {
+    if (cloud && !cloud.ready) return;
     closeNav();
     const route = locate();
     if (route.page === "modulo") modulePage(route.m);
@@ -879,6 +972,7 @@
     }
   });
   window.addEventListener("storage", (event) => {
+    if (cloud) return;
     if (event.key === null) {
       drafts.clear();
       lastId = "";
@@ -925,5 +1019,30 @@
     .querySelectorAll("[data-icon]")
     .forEach((el) => (el.innerHTML = icon(el.dataset.icon)));
   window.addEventListener("hashchange", () => render(true));
-  render();
+  if (cloud) {
+    cloud.start({
+      hasQuestion: (id) => questions.has(id),
+      load(values, last) {
+        drafts.clear();
+        for (const [id, value] of Object.entries(values)) {
+          const q = questions.get(id);
+          if (q) drafts.set(id, normalized(q, value));
+        }
+        lastId = items.get(last)?.a.questions ? last : "";
+        render();
+      },
+      replace(id, value) {
+        drafts.set(id, normalized(questions.get(id), value));
+        render();
+      },
+      clear() {
+        drafts.clear(); lastId = ""; query = ""; showPending = false; includeModels = true;
+        closeNav(); main.replaceChildren();
+        $("#navigation").replaceChildren();
+        $("#crumb").replaceChildren();
+        $("#account-user").textContent = "";
+        $("#account-save").textContent = "";
+      }
+    });
+  } else render();
 })();

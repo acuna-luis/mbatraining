@@ -1,0 +1,11 @@
+# Acceso por IPv4 y validación HTTP-01 para el certificado de esa IP.
+server {
+    listen 80;
+    server_name @IP@;
+    access_log /var/log/nginx/mbatraining-http.log;
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/mbatraining-acme;
+        try_files $uri =404;
+    }
+    location / { return 302 https://@IP@:@PORT@$request_uri; }
+}

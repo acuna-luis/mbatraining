@@ -1,0 +1,25 @@
+server {
+    listen @PORT@ ssl;
+    server_name @IP@;
+    ssl_certificate /etc/mbatraining/acme/live/mbatraining-ip/fullchain.pem;
+    ssl_certificate_key /etc/mbatraining/acme/live/mbatraining-ip/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    access_log /var/log/nginx/mbatraining-access.log combined;
+    error_log /var/log/nginx/mbatraining-error.log;
+    root /srv/mbatraining/current/public;
+    index index.html;
+    client_max_body_size 512k;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy no-referrer always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    location ^~ /api/ {
+        proxy_pass http://127.0.0.1:18437;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_buffering off;
+    }
+    location ~ /\. { deny all; }
+    location / { try_files $uri $uri/ =404; }
+}

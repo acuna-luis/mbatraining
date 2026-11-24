@@ -1,0 +1,23 @@
+[Unit]
+Description=Aula de Economía — cuentas y respuestas
+After=network.target
+
+[Service]
+User=mbatraining
+Group=mbatraining
+WorkingDirectory=/srv/mbatraining/current
+EnvironmentFile=/etc/mbatraining/app.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/mbatraining/venv/bin/gunicorn --bind 127.0.0.1:18437 --workers 2 --threads 2 --error-logfile - server.app:application
+Restart=on-failure
+RestartSec=3
+UMask=0077
+StateDirectory=mbatraining
+StateDirectoryMode=0700
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
