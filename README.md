@@ -2,7 +2,7 @@
 
 Cuaderno interactivo de Fundamentos de Economía. Entra en el [aula por HTTPS](https://65.20.96.181:8443/) con tu cuenta. Al aparecer «Guardado en tu cuenta», tus respuestas y borradores están en SQLite en el servidor y puedes continuar desde otro navegador. Para el primer acceso de una cuenta provisional, abre tu enlace de activación y elige tu contraseña.
 
-1. Elige un módulo y un apartado. Lee las ideas clave y consulta sus gráficos.
+1. Abre un módulo para leer todos sus apartados, consultar los gráficos y contestar las preguntas en una sola página. Usa el índice para saltar a un apartado o pulsa **Siguiente módulo** cuando termines.
 2. En cada pregunta de comprensión puedes elegir una opción o escribir tu propia respuesta. En la pregunta de desarrollo, redacta un texto de unas 100 palabras.
 3. Para contrastar una respuesta, despliega la solución en esa pregunta o abre el **Solucionario** para consultar las 510 respuestas de comprensión y los 102 modelos de desarrollo. Consultar una solución conserva tu respuesta y tu puntuación.
 4. En **Mis respuestas**, revisa cuántas opciones has acertado. Cada elección correcta vale un punto, hasta 510 en el curso. El porcentaje de acierto se calcula sobre las preguntas que has contestado eligiendo una opción. Si cambias una respuesta, el resultado refleja la opción actual. Las respuestas en texto libre, incluidas las de desarrollo, quedan para revisión.

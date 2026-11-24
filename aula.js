@@ -67,14 +67,12 @@
   const link = (item) => "#apartado/" + encodeURIComponent(item.id);
   const modLink = (n) => "#modulo/" + n;
   const items = new Map(),
-    questions = new Map(),
-    units = [];
+    questions = new Map();
   for (const m of modules) {
     m.questions = [];
     for (const a of m.items) {
       items.set(a.id, { a, m });
       if (a.questions) {
-        units.push(a);
         for (const q of a.questions) {
           questions.set(q.id, q);
           m.questions.push(q);
@@ -314,11 +312,10 @@
   function home() {
     nav("home");
     crumb("Vista general");
-    const last = items.get(lastId)?.a,
-      go = last?.questions ? last : units[0];
+    const last = items.get(lastId)?.a;
     main.innerHTML =
       '<section class="hero"><div><p class="eyebrow">Economía · CV-0303</p><h1>Fundamentos<br>de Economía</h1><p class="hero-sub">11 módulos · 102 apartados de estudio · 612 preguntas</p><a class="button light" href="' +
-      link(go) +
+      (last?.questions ? link(last) : modLink(modules[0].number)) +
       '">' +
       icon("book") +
       (last ? "Continuar estudio" : "Empezar a estudiar") +
@@ -337,46 +334,27 @@
   function modulePage(m) {
     nav("", m.number);
     crumb("Módulo " + m.number);
-    const first = m.items.find((a) => a.questions);
-    main.innerHTML =
-      '<div class="eyebrow kicker">Módulo ' +
-      String(m.number).padStart(2, "0") +
-      " · Sesión " +
-      m.number +
-      '</div><h1 class="page-title">' +
-      esc(m.title) +
-      '</h1><div class="page-tools"><a class="button" href="' +
-      link(first) +
-      '">' +
-      icon("book") +
-      "Abrir primer apartado</a></div>" +
-      progressCard(m.questions) +
-      '<section class="panel"><h2>Índice del módulo</h2><div class="outline">' +
-      m.items
-        .map(
-          (a) =>
-            '<div class="list-row' +
-            (a.questions ? "" : " inactive") +
-            '"><a href="' +
-            link(a) +
-            '">' +
-            (/^\d/.test(a.id)
-              ? '<span class="code">' + esc(a.id) + "</span>"
-              : "") +
-            '<div><span class="rowtitle">' +
-            esc(a.title) +
-            "</span>" +
-            (!a.questions
-              ? '<p class="null-note">' + esc(a.note) + "</p>"
-              : "") +
-            "</div></a>" +
-            (a.questions
-              ? '<span class="meta">' + done(a.questions) + " / 6</span>"
-              : "") +
-            "</div>",
-        )
-        .join("") +
-      "</div></section>";
+    const position = modules.indexOf(m);
+    const previous = modules[position - 1], next = modules[position + 1];
+    const links =
+      (previous ? `<a href="${modLink(previous.number)}" rel="prev">Módulo anterior</a>` : "") +
+      (next ? `<a href="${modLink(next.number)}" rel="next">Siguiente módulo</a>` :
+        '<a href="#respuestas">Revisar respuestas</a>');
+    const options = m.items.map(a =>
+      `<option value="${esc(a.id)}">${esc(itemName(a))}</option>`
+    ).join("");
+    main.innerHTML = `<div class="module-heading">
+        <span class="eyebrow kicker">Módulo ${m.number} de ${modules.length}</span>
+        <nav class="module-links" aria-label="Navegación entre módulos">${links}</nav>
+      </div>
+      <h1 class="page-title">${esc(m.title)}</h1>
+      ${progressCard(m.questions)}
+      <div class="module-index"><label class="section-menu">
+        <span>Índice del módulo</span>
+        <select id="item-select"><option value="" disabled selected>Ir a un apartado…</option>${options}</select>
+      </label></div>
+      ${m.items.map(unitSection).join("")}
+      <nav class="module-links module-footer" aria-label="Navegación entre módulos">${links}</nav>`;
   }
   function questionCard(q, num, solutionOpen = false) {
     const d = draft(q),
@@ -454,73 +432,22 @@
       qid +
       '"><span class="eyebrow">' +
       (isLong ? "Pregunta de desarrollo" : "Comprensión · " + num + " de 5") +
-      '</span><h3 id="' +
+      '</span><h4 id="' +
       titleId +
       '">' +
       esc(q.prompt) +
-      "</h3>" +
+      "</h4>" +
       field +
       solution +
       "</article>"
     );
   }
-  function unitPage(a, m) {
-    nav("", m.number);
-    crumb(
-      '<a href="' +
-        modLink(m.number) +
-        '">Módulo ' +
-        m.number +
-        '</a><span class="sep">/</span>Apartado ' +
-        (/^\d/.test(a.id) ? esc(a.id) : "complementario"),
-    );
-    if (a.questions) remember(a.id);
-    const navSelect =
-      '<label class="section-menu"><span class="meta">Ir a un apartado</span><select id="item-select">' +
-      m.items
-        .map(
-          (z) =>
-            '<option value="' +
-            esc(z.id) +
-            '" ' +
-            (a.id === z.id ? "selected" : "") +
-            ">" +
-            esc(itemName(z)) +
-            "</option>",
-        )
-        .join("") +
-      "</select></label>";
-    const top =
-      '<a class="link" href="' +
-      modLink(m.number) +
-      '">Módulo ' +
-      m.number +
-      " · " +
-      esc(m.title) +
-      '</a><h1 class="unit-title">' +
-      esc(itemName(a)) +
-      "</h1>" +
-      navSelect;
-    if (!a.questions) {
-      main.innerHTML = top + '<div class="panel">' + esc(a.note) + "</div>";
-      return;
-    }
-    const j = units.indexOf(a);
-    const pageNav =
-      '<div class="split section-foot">' +
-      (j > 0
-        ? '<a class="quiet" href="' +
-          link(units[j - 1]) +
-          '">Apartado anterior</a>'
-        : "<span></span>") +
-      (j < units.length - 1
-        ? '<a class="button" href="' +
-          link(units[j + 1]) +
-          '">Siguiente apartado</a>'
-        : '<a class="button" href="#respuestas">Revisar respuestas</a>') +
-      "</div>";
-    main.innerHTML =
-      top +
+  function unitSection(a) {
+    const opening = `<section class="study-unit${a.questions ? "" : " unit-note"}"
+      id="apartado-${esc(encodeURIComponent(a.id))}" data-unit="${esc(a.id)}" tabindex="-1">
+      <h2 class="unit-title">${esc(itemName(a))}</h2>`;
+    if (!a.questions) return opening + "<p>" + esc(a.note) + "</p></section>";
+    return opening +
       '<div class="meta">Compendio, p. ' +
       a.page +
       " · Lectura de origen, pp. " +
@@ -528,7 +455,7 @@
       ' · <a href="assets/compendio-color.pdf#page=' +
       a.page +
       '" target="_blank" rel="noopener">Ver página en PDF</a></div>' +
-      '<section class="read-card"><h2>Ideas clave</h2>' +
+      '<section class="read-card"><h3>Ideas clave</h3>' +
       a.ideas.map((s) => "<p>" + esc(s) + "</p>").join("") +
       (a.table
         ? "<table><thead><tr>" +
@@ -550,19 +477,18 @@
       (a.figure
         ? '<button class="figure-btn" data-zoom="' +
           esc(a.id) +
-          '" aria-label="Ampliar gráfico"><img src="' +
+          '" aria-label="Ampliar gráfico"><img width="500" height="150" loading="lazy" src="' +
           esc(a.figure.src) +
           '" alt="' +
           esc(a.figure.alt) +
           '"></button>'
         : "") +
       "</section>" +
-      '<section class="practice"><div class="section-head"><h2>Preguntas del apartado</h2><span class="meta" id="unit-progress" aria-live="polite">' +
+      '<section class="practice"><div class="section-head"><h3>Preguntas del apartado</h3><span class="meta" data-unit-progress aria-live="polite">' +
       done(a.questions) +
-      " de 6 respondidas</span></div>" +
+      " de " + a.questions.length + " respondidas</span></div>" +
       a.questions.map((q, k) => questionCard(q, k + 1)).join("") +
-      "</section>" +
-      pageNav;
+      "</section></section>";
   }
   function report() {
     const result = {
@@ -616,8 +542,8 @@
     if (!answered() && !showPending)
       return (
         '<div class="empty">Aún no has respondido ninguna pregunta. <a class="link" href="' +
-        link(units[0]) +
-        '">Abrir el primer apartado</a></div>'
+        modLink(modules[0].number) +
+        '">Abrir el primer módulo</a></div>'
       );
     return modules
       .filter((m) => showPending || done(m.questions))
@@ -805,16 +731,7 @@
     $("#shade").hidden = true;
     $("#open-nav").setAttribute("aria-expanded", "false");
   }
-  function solutionPage(m, a) {
-    nav("solutions");
-    crumb("Solucionario");
-    const moduleOptions = modules.map((module) => {
-      const first = module.items.find((item) => item.questions);
-      return `<option value="${esc(first.id)}"${module === m ? " selected" : ""}>${module.number}. ${esc(module.title)}</option>`;
-    }).join("");
-    const itemOptions = m.items.filter((item) => item.questions).map((item) =>
-      `<option value="${esc(item.id)}"${item === a ? " selected" : ""}>${esc(itemName(item))}</option>`
-    ).join("");
+  function solutionSection(a) {
     const answers = a.questions.map((q, i) => {
       const isEssay = q.type === "desarrollo";
       const questionLabel = isEssay ? "Pregunta de desarrollo" : `Comprensión · ${i + 1} de 5`;
@@ -824,79 +741,135 @@
         <p class="answer-preview">${esc(window.REFERENCIAS[q.id])}</p>
       </article>`;
     }).join("");
-    const navigate = (unit, text) =>
-      unit ? `<a class="quiet" href="#solucionario/${encodeURIComponent(unit.id)}">${text}</a>` : "<span></span>";
-    const position = units.indexOf(a);
-    main.innerHTML = `<h1 class="page-title">Solucionario</h1>
-      <p>Consulta las 510 respuestas de comprensión y los 102 modelos de desarrollo del curso.</p>
-      <div class="panel">
-        <label class="section-menu"><span class="meta">Módulo</span><select data-solution-select>${moduleOptions}</select></label>
-        <label class="section-menu"><span class="meta">Apartado</span><select data-solution-select>${itemOptions}</select></label>
-      </div>
-      <div class="section-head"><h2>${esc(itemName(a))}</h2><a class="quiet" href="${link(a)}">Practicar este apartado</a></div>
+    return `<section class="study-unit" id="solucion-${esc(encodeURIComponent(a.id))}" tabindex="-1" aria-labelledby="solucion-titulo-${esc(a.id)}">
+      <div class="section-head"><h2 class="unit-title" id="solucion-titulo-${esc(a.id)}">${esc(itemName(a))}</h2>
+        <a class="quiet" href="${link(a)}">Practicar este apartado</a></div>
       ${answers}
-      <div class="split section-foot">${navigate(units[position - 1], "Apartado anterior")}${navigate(units[position + 1], "Siguiente apartado")}</div>`;
-    main.querySelectorAll("[data-solution-select]").forEach((select) => {
-      select.onchange = () => { location.hash = "#solucionario/" + encodeURIComponent(select.value); };
-    });
+    </section>`;
+  }
+  function solutionPage(m) {
+    nav("solutions");
+    crumb("Solucionario · Módulo " + m.number);
+    const sections = m.items.filter((a) => a.questions);
+    const moduleOptions = modules.map((module) =>
+      `<option value="${module.number}"${module === m ? " selected" : ""}>${module.number}. ${esc(module.title)}</option>`
+    ).join("");
+    const sectionOptions = sections.map((a) =>
+      `<option value="${esc(a.id)}">${esc(itemName(a))}</option>`
+    ).join("");
+    const position = modules.indexOf(m);
+    const previous = modules[position - 1], next = modules[position + 1];
+    const essays = m.questions.filter((q) => q.type === "desarrollo").length;
+    main.innerHTML = `<div class="eyebrow kicker">Solucionario · Módulo ${m.number}</div>
+      <h1 class="page-title">${esc(m.title)}</h1>
+      <p>${m.questions.length - essays} respuestas de comprensión · ${essays} modelos de desarrollo</p>
+      <label class="section-menu"><span class="meta">Módulo</span><select data-solution-select>${moduleOptions}</select></label>
+      <div class="module-index"><label class="section-menu"><span>Ir a un apartado</span><select data-solution-jump><option value="">Seleccionar apartado</option>${sectionOptions}</select></label></div>
+      ${sections.map(solutionSection).join("")}
+      <nav class="split section-foot" aria-label="Módulos del solucionario">
+        ${previous ? `<a class="quiet" href="#solucionario/${previous.number}">Módulo anterior</a>` : "<span></span>"}
+        ${next ? `<a class="button" href="#solucionario/${next.number}">Siguiente módulo</a>` : '<a class="button" href="#respuestas">Mis respuestas</a>'}
+      </nav>`;
+    const select = main.querySelector("[data-solution-select]");
+    select.onchange = () => goToHash("#solucionario/" + select.value);
+    const jump = main.querySelector("[data-solution-jump]");
+    jump.onchange = () => {
+      const id = jump.value;
+      if (!id) return;
+      jump.value = "";
+      goToHash("#solucionario/" + encodeURIComponent(id));
+    };
+  }
+  function goToHash(hash) {
+    if (location.hash === hash) render(true);
+    else location.hash = hash;
   }
   function locate() {
     const [page, id] = location.hash.slice(1).split("/");
-    if (page === "solucionario") {
-      const selected = items.get(id);
-      return { page, ...(selected?.a.questions ? selected : items.get(units[0].id)) };
-    }
-    if (page === "apartado") {
-      try {
-        const found = items.get(decodeURIComponent(id));
-        if (found) return { page, ...found };
-      } catch {}
-    }
-    if (page === "modulo") {
-      const m = modules.find((m) => String(m.number) === id);
-      if (m) return { page, m };
-    }
+    let item;
+    try { item = items.get(decodeURIComponent(id || "")); } catch {}
+    const m = modules.find((module) => String(module.number) === id);
+    if (page === "apartado" && item) return { page: "modulo", ...item };
+    if (page === "modulo" && m) return { page, m };
+    if (page === "solucionario")
+      return item?.a.questions ? { page, ...item } : { page, m: m || modules[0] };
     return { page: page === "respuestas" ? "respuestas" : "inicio" };
   }
-  function render(focus = false) {
+  let renderedPage, renderedModule, readingSections = [], scrollTimer;
+  function render(navigation = false) {
     if (cloud && !cloud.ready) return;
     closeNav();
     const route = locate();
-    if (route.page === "modulo") modulePage(route.m);
-    else if (route.page === "apartado") unitPage(route.a, route.m);
-    else if (route.page === "respuestas") review();
-    else if (route.page === "solucionario") solutionPage(route.m, route.a);
-    else home();
+    const changed = renderedPage !== route.page || renderedModule !== route.m;
+    clearTimeout(scrollTimer);
+    if (changed || !navigation) {
+      if (route.page === "modulo") modulePage(route.m);
+      else if (route.page === "respuestas") review();
+      else if (route.page === "solucionario") solutionPage(route.m);
+      else home();
+      renderedPage = route.page;
+      renderedModule = route.m;
+      readingSections = Array.from(main.querySelectorAll("[data-unit]"));
+    }
     document.title =
-      (route.a
-        ? (route.page === "solucionario" ? "Solucionario · " : "") + itemName(route.a)
-        : route.m
-          ? route.m.title
-          : route.page === "respuestas"
-            ? "Mis respuestas"
-            : "Fundamentos de Economía") + " · MBA Training";
-    if (focus) {
-      main.focus({ preventScroll: true });
-      window.scrollTo({ top: 0, behavior: "instant" });
+      (route.page === "solucionario" ? "Solucionario · " : "") +
+      (route.a ? itemName(route.a) : route.m?.title ||
+        (route.page === "respuestas" ? "Mis respuestas" : "Fundamentos de Economía")) + " · MBA Training";
+    if (navigation || changed) {
+      let target;
+      if (route.a) {
+        const prefix = route.page === "modulo" ? "apartado-" : "solucion-";
+        target = document.getElementById(prefix + encodeURIComponent(route.a.id));
+      }
+      if (route.page === "modulo") {
+        const start = route.a || route.m.items.find((item) => item.questions);
+        if (start?.questions) remember(start.id);
+      }
+      if (navigation) (target || main).focus({ preventScroll: true });
+      if (target) target.scrollIntoView({ block: "start", behavior: "instant" });
+      else if (navigation) window.scrollTo({ top: 0, behavior: "instant" });
     }
   }
-  function updateCount() {
-    const item = locate().a,
-      elm = $("#unit-progress");
-    if (elm && item) {
-      const text = done(item.questions) + " de 6 respondidas";
-      if (elm.textContent !== text) elm.textContent = text;
-    }
+  window.addEventListener("scroll", () => {
+    if (!readingSections.length) return;
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      const mark = window.innerHeight / 3;
+      const active = readingSections.find((section) => section.getBoundingClientRect().bottom > mark);
+      if (!active || active.getBoundingClientRect().top > mark) return;
+      const id = active.dataset.unit;
+      if (items.get(id).a.questions) remember(id);
+    }, 180);
+  }, { passive: true });
+  main.addEventListener("focusin", (event) => {
+    const section = event.target.closest("[data-unit]");
+    if (section && items.get(section.dataset.unit).a.questions) remember(section.dataset.unit);
+  });
+  function updateCount(card) {
+    const section = card.closest("[data-unit]");
+    const { a, m } = items.get(section.dataset.unit);
+    const counter = $("[data-unit-progress]", section);
+    const label = done(a.questions) + " de " + a.questions.length + " respondidas";
+    if (counter.textContent === label) return;
+    counter.textContent = label;
+    const count = done(m.questions);
+    $(".progress-card .progress-line .meta", main).textContent =
+      count + " de " + m.questions.length + " preguntas respondidas";
+    $(".progress-card .meter b", main).style.width = (100 * count / m.questions.length) + "%";
   }
   function redrawCard(card, q, focusSel) {
-    const a = locate().a;
-    if (!a) return;
+    const { a } = items.get(card.closest("[data-unit]").dataset.unit);
     const wrap = document.createElement("div");
     wrap.innerHTML = questionCard(q, a.questions.indexOf(q) + 1, $(".question-solution", card).open);
     const fresh = wrap.firstElementChild;
     card.replaceWith(fresh);
     if (focusSel) $(focusSel, fresh)?.focus({ preventScroll: true });
-    updateCount();
+    updateCount(fresh);
+  }
+  function refreshDraft(q) {
+    const card = main.querySelector('[data-q="' + CSS.escape(q.id) + '"]');
+    if (card) redrawCard(card, q);
+    else if (renderedPage === "inicio" || renderedPage === "respuestas") render();
   }
   main.addEventListener("input", (e) => {
     if (e.target.id === "find") {
@@ -911,11 +884,14 @@
     save(q, { ...d, text: e.target.value, mode: "texto" });
     $("[data-words]", card).textContent =
       wordCount(e.target.value) + " palabras";
-    updateCount();
+    updateCount(card);
   });
   main.addEventListener("change", (e) => {
     if (e.target.id === "item-select") {
-      location.hash = "#apartado/" + encodeURIComponent(e.target.value);
+      if (!e.target.value) return;
+      const hash = "#apartado/" + encodeURIComponent(e.target.value);
+      e.target.value = "";
+      goToHash(hash);
       return;
     }
     if (["models", "pending"].includes(e.target.id)) {
@@ -987,9 +963,7 @@
     } catch {
       return;
     }
-    const card = main.querySelector('[data-q="' + q.id + '"]');
-    if (card) redrawCard(card, q);
-    else render();
+    refreshDraft(q);
   });
   const toggle = $("#open-nav");
   toggle.addEventListener("click", () => {
@@ -1010,6 +984,18 @@
   });
   $("#navigation").addEventListener("click", (e) => {
     if (e.target.closest("a")) closeNav();
+  });
+  document.addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    const hash = e.target.closest('a[href^="#"]')?.getAttribute("href");
+    if (hash === "#main") {
+      e.preventDefault();
+      main.focus({ preventScroll: true });
+      main.scrollIntoView({ behavior: "instant" });
+    } else if (hash && hash === location.hash) {
+      e.preventDefault();
+      render(true);
+    }
   });
   $(".close-dialog").onclick = () => $("#figure-dialog").close();
   $("#figure-dialog").addEventListener("click", (e) => {
@@ -1032,11 +1018,14 @@
         render();
       },
       replace(id, value) {
-        drafts.set(id, normalized(questions.get(id), value));
-        render();
+        const q = questions.get(id);
+        drafts.set(id, normalized(q, value));
+        refreshDraft(q);
       },
       clear() {
         drafts.clear(); lastId = ""; query = ""; showPending = false; includeModels = true;
+        clearTimeout(scrollTimer);
+        readingSections = []; renderedModule = undefined; renderedPage = undefined;
         closeNav(); main.replaceChildren();
         $("#navigation").replaceChildren();
         $("#crumb").replaceChildren();

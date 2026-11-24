@@ -16,9 +16,6 @@
 * {
   box-sizing: border-box;
 }
-html {
-  scroll-behavior: smooth;
-}
 body {
   margin: 0;
   background: var(--paper);
@@ -410,8 +407,8 @@ main:focus {
 }
 .section-head h2,
 .panel h2,
-.read-card h2,
-.practice h2 {
+.read-card h3,
+.practice .section-head h3 {
   font-family: var(--serif);
   font-size: 1.8rem;
   line-height: 1.15;
@@ -512,6 +509,80 @@ main:focus {
   font-size: clamp(2rem, 3.3vw, 3rem);
   color: var(--ink);
   margin: 12px 0;
+}
+.module-heading,
+.module-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.module-heading {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.module-links {
+  font-size: .89rem;
+  font-weight: 600;
+}
+.module-links a:hover {
+  text-decoration: underline;
+}
+.module-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  margin-top: 36px;
+}
+.module-footer a {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  color: var(--ink);
+  padding: 9px 15px;
+}
+.module-footer a:last-child {
+  margin-left: auto;
+  background: var(--green);
+  color: white;
+}
+.module-index {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-block: 1px solid var(--line);
+  background: var(--paper);
+  padding: 8px 0;
+}
+.module-index .section-menu {
+  margin: 0;
+  flex-wrap: nowrap;
+}
+.module-index .section-menu > span {
+  color: var(--ink);
+  font-size: .88rem;
+  font-weight: 600;
+}
+.module-index select {
+  flex: 1;
+  width: 0;
+}
+.study-unit {
+  padding-top: clamp(18px, 3vw, 36px);
+  scroll-margin-top: 4rem;
+}
+.study-unit + .study-unit {
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+}
+.study-unit:focus {
+  outline: none;
+}
+.unit-note .unit-title {
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+}
+.unit-note p {
+  margin: 0;
+  color: var(--muted);
 }
 .kicker,
 .link {
@@ -633,7 +704,8 @@ dialog img {
 .q-card {
   margin: 12px 0;
 }
-.q-card h3 {
+.q-card h3,
+.q-card h4 {
   margin: 6px 0 15px;
   color: var(--ink);
   font-size: 1.09rem;
