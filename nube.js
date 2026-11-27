@@ -10,9 +10,14 @@
   const sameDraft = (a, b) => a.mode === b.mode && a.text === b.text && a.choice === b.choice;
   const tabKey = (user) => "mba.pendientes.v1." + user;
   const state = { user: "", ready: false, revisions: new Map(), pending: new Map(), last: null };
-  let hooks, run, delay, lastError = "", conflict, closing = false, epoch = 0;
-  let activation = new URLSearchParams(location.hash.slice(1)).get("activar") || "";
-  if (activation) history.replaceState(null, "", location.pathname + location.search);
+  let hooks, run, delay, lastError = "", logoutError = "", conflict, warningKey, closing = false, epoch = 0;
+  function activationFromLink() {
+    const token = new URLSearchParams(location.hash.slice(1)).get("activar") || "";
+    if (token) history.replaceState(null, "", location.pathname + location.search);
+    return token;
+  }
+  let activation = activationFromLink();
+  let activating = Boolean(activation);
   let channel;
   try { channel = new BroadcastChannel("mba.sesion.v1"); } catch { /* Sin avisos entre pestañas. */ }
 
@@ -61,7 +66,11 @@
       if (typeof saved?.last === "string") state.last = saved.last;
     } catch { /* Un almacenamiento de sesión restringido permite trabajar en memoria. */ }
   }
-  const resetAlert = () => { const box = get("#save-warning"); box.replaceChildren(); box.hidden = true; };
+  function resetAlert() {
+    warningKey = null;
+    const box = get("#save-warning");
+    if (!box.hidden) { box.replaceChildren(); box.hidden = true; }
+  }
   function action(box, label, callback) {
     const button = document.createElement("button");
     button.type = "button"; button.className = "quiet"; button.textContent = label;
@@ -70,25 +79,49 @@
   function showStatus() {
     if (!state.ready) return;
     const status = get("#account-save"), box = get("#save-warning");
-    const message = conflict ? "Hay dos versiones" : lastError ? "Cambios sin guardar" : dirty() ? "Guardando…" : "Guardado en tu cuenta";
+    const pending = dirty(), statusKey = conflict ? "conflict" : lastError ? "error" : pending ? "pending" : "saved";
+    const message = conflict ? "Hay dos versiones" : lastError ? "Cambios sin guardar" : pending ? "Guardando…" : "Guardado en tu cuenta";
     if (status.textContent !== message) status.textContent = message;
-    const mobile = get("#mobile-account"); mobile.hidden = false; mobile.textContent = state.user + " · " + message;
-    resetAlert();
-    if (!conflict && !lastError) return;
+    status.dataset.state = statusKey;
+    const mobile = get("#mobile-account");
+    mobile.hidden = false;
+    if (mobile.dataset.state !== statusKey || mobile.title !== state.user + " · " + message) {
+      mobile.dataset.state = statusKey;
+      mobile.title = state.user + " · " + message;
+      const label = { saved: "Guardado", pending: "Guardando…", error: "Pendiente", conflict: "Dos versiones" }[statusKey];
+      if (conflict || lastError) {
+        const review = document.createElement("button");
+        review.type = "button";
+        review.textContent = label;
+        review.setAttribute("aria-label", message + ". Revisar guardado");
+        review.addEventListener("click", () => {
+          box.scrollIntoView({block: "start"});
+          box.querySelector("summary, button")?.focus({preventScroll: true});
+        });
+        mobile.replaceChildren(review);
+      } else mobile.textContent = label;
+    }
+    const key = conflict || lastError || logoutError;
+    if (!key) { resetAlert(); return; }
+    if (key === warningKey) {
+      if (conflict) box.querySelector("[data-local-draft]").textContent = describeDraft(state.pending.get(conflict.id));
+      return;
+    }
+    box.replaceChildren();
+    warningKey = key;
     box.hidden = false;
     if (conflict) {
       const {id, remote} = conflict, local = state.pending.get(id);
       const title = document.createElement("strong");
       title.textContent = "Otra sesión modificó la respuesta " + id + "."; box.append(title);
-      const compare = (name, draft) => {
+      const compare = (name, draft, isLocal) => {
         const section = document.createElement("details"), head = document.createElement("summary");
         head.textContent = name; section.append(head);
         const p = document.createElement("p");
-        p.textContent = "Modalidad: " + (draft.mode === "texto" ? "texto" : "elección") +
-          "\nSelección: " + (draft.choice || "Sin seleccionar") +
-          "\nTexto: " + (draft.text || "Sin escribir"); section.append(p); box.append(section);
+        if (isLocal) p.dataset.localDraft = "";
+        p.textContent = describeDraft(draft); section.append(p); box.append(section);
       };
-      compare("Tu borrador", local); compare("Versión guardada", remote);
+      compare("Tu borrador", local, true); compare("Versión guardada", remote);
       action(box, "Guardar mi versión", () => {
         const local = state.pending.get(id); local.revision = remote.revision;
         conflict = null; journal(); schedule(0);
@@ -98,34 +131,72 @@
         conflict = null; hooks.replace(id, remote); journal(); schedule(0);
       });
     } else {
-      const p = document.createElement("p"); p.textContent = lastError; box.append(p);
-      action(box, "Reintentar guardado", () => { lastError = ""; schedule(0); });
+      const p = document.createElement("p"); p.textContent = lastError || logoutError; box.append(p);
+      if (lastError) action(box, "Reintentar guardado", () => { lastError = ""; schedule(0); });
+      else action(box, "Reintentar salida", logout);
     }
   }
-  function gate(message = "") {
+  function describeDraft(draft) {
+    return "Modalidad: " + (draft.mode === "texto" ? "texto" : "elección") +
+      "\nSelección: " + (draft.choice || "Sin seleccionar") +
+      "\nTexto: " + (draft.text || "Sin escribir");
+  }
+  function authMode(enabled) {
+    activating = enabled;
+    const initial = get("#auth-initial");
+    initial.hidden = initial.disabled = !enabled;
+    get("#auth-code-field").hidden = Boolean(activation);
+    get("#auth-token").required = enabled && !activation;
+    get("#auth-new").required = enabled;
+    get("#auth-title").textContent = enabled ? "Activar cuenta" : "Iniciar sesión";
+    document.title = get("#auth-title").textContent + " · MBA Training";
+    get("#auth-intro").textContent = enabled
+      ? "Entra con tus datos provisionales y elige la contraseña de tu cuaderno."
+      : "Entra en tu cuaderno para continuar donde lo dejaste.";
+    get("#auth-pass-label").textContent = enabled ? "Contraseña provisional" : "Contraseña";
+    get("#auth-submit").textContent = enabled ? "Activar y entrar" : "Entrar al cuaderno";
+    get("#auth-mode").textContent = enabled ? "Volver a iniciar sesión" : "Activar mi cuenta";
+  }
+  function passwordVisibility(button, visible) {
+    const input = document.getElementById(button.dataset.password);
+    input.type = visible ? "text" : "password";
+    const verb = visible ? "Ocultar" : "Mostrar";
+    button.textContent = verb;
+    button.setAttribute("aria-label", verb + (input.id === "auth-new" ? " nueva contraseña" : " contraseña"));
+  }
+  function clearFields() {
+    get("#auth-form").reset();
+    for (const button of document.querySelectorAll("[data-password]")) passwordVisibility(button, false);
+    for (const field of document.querySelectorAll("#auth-form [aria-invalid]")) field.removeAttribute("aria-invalid");
+  }
+  function gate(message = "", stage = "form") {
     get("#figure-dialog").close();
     document.body.classList.remove("nav-open");
     document.body.classList.add("account-locked");
     get("#auth-screen").hidden = false;
     get("#account-tools").hidden = true; get("#mobile-account").hidden = true;
     get("#auth-status").textContent = message;
-    get("#auth-form").hidden = false;
-    get("#auth-retry").hidden = true;
+    get("#auth-form").hidden = stage !== "form";
+    get("#auth-mode").hidden = stage !== "form";
+    get("#auth-retry").hidden = stage !== "retry";
     const sameAccount = !!(state.user && dirty());
     const username = get("#auth-name");
     username.readOnly = sameAccount;
     if (sameAccount) username.value = state.user;
-    get("#auth-initial").hidden = !activation;
-    get("#auth-new").required = !!activation;
-    get("#auth-token").required = !!activation;
-    if (activation) get("#auth-token").value = activation;
+    if (sameAccount) get("#auth-mode").hidden = true;
+    authMode(activating);
+    if (stage !== "form") {
+      get("#auth-title").textContent = stage === "retry" ? "Conecta con el aula" : "Abriendo el aula";
+      get("#auth-intro").textContent = "";
+      document.title = get("#auth-title").textContent + " · MBA Training";
+    }
     resetAlert();
   }
   function lock(message) {
     ++epoch;
     clearTimeout(delay); state.ready = false; closing = false;
-    get(".shell").inert = false; get("#sidebar").inert = false;
-    journal(); hooks.clear(); gate(message);
+    logoutError = "";
+    clearFields(); journal(); hooks.clear(); gate(message);
     if (state.user && dirty()) {
       get("#auth-status").textContent += " Vuelve a entrar con tu cuenta para guardar los cambios pendientes.";
     }
@@ -195,7 +266,7 @@
     const remote = await api("state", "GET", undefined, user);
     if (generation !== epoch) return;
     restore(user); state.user = user;
-    state.revisions.clear(); conflict = null; lastError = "";
+    state.revisions.clear(); conflict = null; lastError = ""; logoutError = "";
     const merged = {...remote.drafts};
     for (const [id,d] of Object.entries(remote.drafts)) state.revisions.set(id,d.revision);
     for (const [id,d] of state.pending) {
@@ -203,7 +274,7 @@
       else merged[id] = d;
     }
     if (remote.lastId === state.last) state.last = null;
-    get("#auth-form").reset(); get("#auth-token").value = ""; activation = "";
+    clearFields(); activation = ""; activating = false;
     document.body.classList.remove("account-locked");
     get("#auth-screen").hidden = true; get("#account-tools").hidden = false;
     get("#account-user").textContent = user; get("#account-save").textContent = "";
@@ -211,62 +282,95 @@
     schedule(0);
   }
   async function check() {
-    gate("Comprobando sesión…"); get("#auth-form").hidden = true;
+    gate("Comprobando tu sesión…", "loading");
     try {
       const {user} = await api("session");
-      if (user && (!dirty() || !state.user || state.user === user)) await open(user);
+      if (user && !activation && (!dirty() || !state.user || state.user === user)) await open(user);
       else gate(state.user && dirty() ? "Vuelve a entrar para recuperar tus cambios." : "");
     } catch(error) {
       if(error.status===401){gate();return;}
-      gate("No se ha podido conectar con el servidor."); get("#auth-form").hidden = true; get("#auth-retry").hidden = false;
+      gate("Comprueba tu conexión y vuelve a intentarlo.", "retry");
     }
   }
   async function login(e) {
     e.preventDefault();
     const form = e.currentTarget, username = get("#auth-name").value.trim();
+    if (get("#auth-submit").disabled) return;
     const body = {username,password:get("#auth-pass").value};
-    if (!get("#auth-initial").hidden) {
-      body.bootstrapToken = get("#auth-token").value.trim(); body.newPassword = get("#auth-new").value;
+    if (activating) {
+      body.bootstrapToken = activation || get("#auth-token").value.trim();
+      body.newPassword = get("#auth-new").value;
+      if (body.newPassword === body.password) {
+        authError("Elige una contraseña distinta de la provisional.", "#auth-new");
+        return;
+      }
     }
-    get("#auth-submit").disabled = true;
+    get("#auth-submit").disabled = get("#auth-mode").disabled = true;
+    form.setAttribute("aria-busy", "true");
     get("#auth-status").textContent = "Abriendo tu cuaderno…";
     try {
       const {user} = await api("login","POST",body);
       channel?.postMessage("session");
-      activation = ""; form.reset(); get("#auth-token").value = "";
-      try { await open(user); }
+      activation = ""; activating = false; clearFields();
+      try {
+        await open(user);
+        if (state.ready) get("#main").focus({ preventScroll: true });
+      }
       catch (error) {
-        gate("Has iniciado sesión. Vuelve a conectar para cargar tus respuestas.");
-        get("#auth-form").hidden = true; get("#auth-retry").hidden = false;
+        gate("Has iniciado sesión. Vuelve a conectar para cargar tus respuestas.", "retry");
       }
     } catch(error) {
       if(error.message==="activation_required") {
-        get("#auth-initial").hidden = false;
-        get("#auth-token").required = true; get("#auth-new").required = true;
-        get("#auth-status").textContent = "Para el primer acceso, introduce el código de activación y elige tu contraseña.";
+        const triedCode = activating;
+        activation = ""; authMode(true);
+        if (triedCode) authError("Revisa el código de activación que recibiste.", "#auth-token");
+        else {
+          get("#auth-status").textContent = "Para el primer acceso necesitas tu código de activación.";
+          get("#auth-token").focus();
+        }
       } else {
-        get("#auth-status").textContent = error.status===429 ? "Demasiados intentos. Espera unos minutos antes de volver a entrar." :
-          error.message==="weak_password" ? "Escribe una contraseña nueva de al menos 12 caracteres." :
-          error.status===401 ? "Usuario o contraseña incorrectos." : "No se ha podido abrir el cuaderno. Vuelve a intentarlo.";
+        if (error.message === "weak_password") authError("Elige una contraseña de al menos 12 caracteres, distinta de la provisional.", "#auth-new");
+        else if (error.status === 401) authError("Revisa el usuario y la contraseña.", "#auth-pass");
+        else get("#auth-status").textContent = error.status === 429
+          ? "Demasiados intentos. Espera unos minutos antes de volver a entrar."
+          : "Comprueba tu conexión y vuelve a entrar.";
       }
-    } finally {get("#auth-submit").disabled = false;}
+    } finally {
+      get("#auth-submit").disabled = get("#auth-mode").disabled = false;
+      form.removeAttribute("aria-busy");
+    }
+  }
+  function authError(message, selector) {
+    get("#auth-status").textContent = message;
+    const field = get(selector);
+    field.setAttribute("aria-invalid", "true");
+    field.setAttribute("aria-errormessage", "auth-status");
+    field.focus();
   }
   async function logout() {
     if(closing || !state.ready)return;
-    closing = true;get(".shell").inert=true;get("#sidebar").inert=true;
+    hooks.closeNav?.();
+    const shell = get(".shell"), sidebar = get("#sidebar");
+    const shellWasInert = shell.inert, sidebarWasInert = sidebar.inert;
+    closing = true; logoutError = ""; shell.inert = sidebar.inert = true;
     try {
       await flush();
       if(!state.ready || dirty())return;
       await api("logout","POST",{},state.user);
       journal(); state.user=""; channel?.postMessage("session");
-      lock("Sesión cerrada.");get("#auth-form").reset();get("#auth-name").focus();
+      lock("Sesión cerrada.");
+      get("#auth-title").focus();
     } catch(error) {
       if(error.status===401)lock("La sesión ha terminado.");
       else {
-        lastError="No se pudo cerrar la sesión. Comprueba la conexión y vuelve a pulsar Salir.";
+        logoutError="No se pudo cerrar la sesión. Comprueba tu conexión y vuelve a intentarlo.";
         showStatus();
       }
-    } finally {closing=false;get(".shell").inert=false;get("#sidebar").inert=false;}
+    } finally {
+      closing = false; shell.inert = shellWasInert; sidebar.inert = sidebarWasInert;
+      const warning = get("#save-warning");
+      if (state.ready && !warning.hidden) warning.querySelector("button")?.focus();
+    }
   }
   async function verifySession() {
     if(!state.ready || closing)return;
@@ -279,8 +383,31 @@
   function start(callbacks) {
     hooks=callbacks;
     get("#auth-form").addEventListener("submit",login);
+    get("#auth-form").addEventListener("input", (event) => {
+      if (event.target.hasAttribute("aria-invalid")) event.target.removeAttribute("aria-invalid");
+    });
+    for (const button of document.querySelectorAll("[data-password]")) {
+      button.addEventListener("click", () => {
+        passwordVisibility(button, document.getElementById(button.dataset.password).type === "password");
+      });
+    }
+    get("#auth-mode").addEventListener("click", () => {
+      activation = "";
+      get("#auth-token").value = get("#auth-new").value = "";
+      get("#auth-status").textContent = "";
+      authMode(!activating);
+      get("#auth-title").focus();
+    });
     get("#auth-retry").addEventListener("click",check);
     get("#account-logout").addEventListener("click",logout);
+    window.addEventListener("hashchange", () => {
+      const token = activationFromLink();
+      if (!token) return;
+      activation = token;
+      activating = true;
+      if (state.ready) lock("Introduce los datos de la cuenta que vas a activar.");
+      else gate();
+    });
     channel?.addEventListener("message",verifySession);
     window.addEventListener("focus",verifySession);
     window.addEventListener("pageshow",e=>{if(e.persisted)verifySession();});

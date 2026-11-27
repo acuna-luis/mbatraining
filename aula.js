@@ -26,7 +26,9 @@
     sheet: '<path d="M6 3h9l4 4v14H6z M14 3v5h5 M9 12h7 M9 16h5"/>',
     book: '<path d="M3 5c3-1 6 0 9 2 3-2 6-3 9-2v14c-3-1-6 0-9 2-3-2-6-3-9-2z M12 7v14"/>',
     save: '<path d="M3 5h15l3 3v13H3z M7 5v6h9V5 M7 21v-7h10v7"/>',
-    menu: '<path d="M3 6h18 M3 12h18 M3 18h18"/>',
+    close: '<path d="m6 6 12 12 M18 6 6 18"/>',
+    user: '<circle cx="12" cy="8" r="3.4"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/>',
+    logout: '<path d="M10 4H4v16h6 M9 12h12 m-5-5 5 5-5 5"/>',
     search: '<circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/>',
     trend: '<path d="M3 19h18 M5 15l5-5 4 3 6-8 M16 5h4v4"/>',
     layers: '<path d="m3 8 9-5 9 5-9 5z M3 12l9 5 9-5 M3 16l9 5 9-5"/>',
@@ -164,16 +166,15 @@
   function scorePanel() {
     const s = scoreSummary();
     return `<section class="panel score-panel" aria-labelledby="score-title">
-      <h2 id="score-title">Puntuación automática</h2>
-      <p class="score-result">${s.evaluadas
-        ? `<strong>${s.aciertos} / ${s.evaluadas}</strong> puntos · ${s.porcentaje} % de acierto`
-        : "Aún no has contestado ninguna pregunta por elección."}</p>
+      <div class="score-heading"><h2 id="score-title">Resultados</h2>
+        ${s.evaluadas ? `<span class="accuracy">${s.porcentaje} % de acierto</span>` : ""}</div>
       <dl class="score-breakdown">
         <div><dt>Aciertos</dt><dd>${s.aciertos}</dd></div>
         <div><dt>Errores</dt><dd>${s.errores}</dd></div>
-        <div><dt>Respuestas escritas para revisar</dt><dd>${s.escritas}</dd></div>
+        <div><dt>Escritas</dt><dd>${s.escritas}</dd></div>
       </dl>
-      <p class="meta">Cada elección correcta suma 1 punto. Has contestado por elección ${s.evaluadas} de las ${s.maximo_curso} preguntas autocorregibles del curso.</p>
+      <p class="meta">Cada acierto suma un punto. Llevas ${s.aciertos} de ${s.maximo_curso} puntos posibles.
+        Las respuestas escritas se revisan aparte.</p>
     </section>`;
   }
   function save(q, d) {
@@ -205,170 +206,218 @@
       parts;
   }
   function nav(current = "", mod = 0) {
-    $("#navigation").innerHTML =
-      '<a href="#inicio" class="nav-main ' +
-      (current === "home" ? "active" : "") +
-      '" ' +
-      (current === "home" ? 'aria-current="page"' : "") +
-      ">" +
-      icon("grid") +
-      "Vista general</a>" +
-      '<a href="#respuestas" class="nav-main ' +
-      (current === "answers" ? "active" : "") +
-      '" ' +
-      (current === "answers" ? 'aria-current="page"' : "") +
-      ">" +
-      icon("sheet") +
-      "Mis respuestas</a>" +
-      '<a href="#solucionario" class="nav-main ' +
-      (current === "solutions" ? 'active" aria-current="page">' : '">') +
-      icon("book") +
-      "Solucionario</a>" +
-      '<div class="nav-label">Módulos del curso</div>' +
-      modules
-        .map(
-          (m) =>
-            '<a href="' +
-            modLink(m.number) +
-            '" class="nav-mod ' +
-            (m.number === mod ? "active" : "") +
-            '" ' +
-            (m.number === mod ? 'aria-current="location"' : "") +
-            '><span class="num">' +
-            String(m.number).padStart(2, "0") +
-            "</span><span>" +
-            esc(m.title) +
-            "</span></a>",
-        )
-        .join("");
+    const selectedTab = current || "modules";
+    document.querySelectorAll("[data-tab]").forEach((tab) => {
+      if (tab.dataset.tab === selectedTab) {
+        tab.setAttribute("aria-current", selectedTab === "modules" ? "location" : "page");
+      } else tab.removeAttribute("aria-current");
+    });
+    const destinations = [
+      ["home", "#inicio", "grid", "Vista general"],
+      ["answers", "#respuestas", "sheet", "Mis respuestas"],
+      ["solutions", "#solucionario", "book", "Solucionario"],
+    ];
+    const links = destinations.map(([key, url, symbol, title]) =>
+      `<a href="${url}" class="nav-main${current === key ? " active" : ""}"
+        ${current === key ? 'aria-current="page"' : ""}>${icon(symbol)}${title}</a>`
+    );
+    const syllabus = modules.map((m) =>
+      `<a href="${modLink(m.number)}" class="nav-mod${m.number === mod ? " active" : ""}"
+        ${m.number === mod ? 'aria-current="location"' : ""}>
+        <span class="num">${String(m.number).padStart(2, "0")}</span><span>${esc(m.title)}</span></a>`
+    );
+    $("#navigation").innerHTML = links.join("") +
+      '<div class="nav-label">Módulos del curso</div>' + syllabus.join("");
   }
   function progressCard(list) {
     const count = done(list);
-    return (
-      '<section class="progress-card" aria-label="Progreso"><span class="icon-tile">' +
-      icon("trend") +
-      '</span><div class="progress-info"><div class="progress-line"><strong>Tu progreso</strong><span class="meta">' +
-      count +
-      " de " +
-      list.length +
-      " preguntas respondidas</span></div>" +
-      meter(count, list.length) +
-      '</div><a class="quiet" href="#respuestas">Mis respuestas</a></section>'
-    );
+    return `<section class="progress-card" aria-label="Progreso">
+      <span class="icon-tile">${icon("trend")}</span>
+      <div class="progress-info"><div class="progress-line"><strong>Tu progreso</strong>
+        <span class="meta">${count} de ${list.length} preguntas respondidas</span></div>
+        ${meter(count, list.length)}</div>
+      <a class="quiet" href="#respuestas">Mis respuestas</a></section>`;
   }
   function card(m) {
-    const count = m.items.filter((a) => a.questions && !a.isFinal).length,
-      finished = done(m.questions);
-    return (
-      '<a class="module-card" href="' +
-      modLink(m.number) +
-      '"><div class="card-top"><span class="icon-tile">' +
-      icon(moduleIcons[m.number - 1]) +
-      '</span><span class="eyebrow">Módulo ' +
-      String(m.number).padStart(2, "0") +
-      "</span></div><h3>" +
-      esc(m.title) +
-      '</h3><span class="meta">' +
-      count +
-      " apartados de estudio · " +
-      m.questions.length +
-      " preguntas</span>" +
-      meter(finished, m.questions.length) +
-      "</a>"
-    );
+    const sections = m.items.filter((a) => a.questions && !a.isFinal).length;
+    const finished = done(m.questions);
+    const number = String(m.number).padStart(2, "0");
+    return `<a class="catalog-card" href="${modLink(m.number)}">
+      <span class="catalog-icon">${icon(moduleIcons[m.number - 1])}</span>
+      <div class="catalog-card-copy"><span class="catalog-number">Módulo ${number}</span>
+        <h3>${esc(m.title)}</h3>
+        <p>${sections} apartados · ${m.questions.length} preguntas</p>
+        ${finished ? `<div class="catalog-completed">${meter(finished, m.questions.length)}
+          <span>${finished} de ${m.questions.length} respondidas</span></div>` : ""}</div>
+    </a>`;
   }
   function results() {
-    const value = fold(query.trim()),
-      out = $("#module-list");
-    if (!value) {
-      out.className = "cards";
+    const terms = fold(query.trim()).split(/\s+/).filter(Boolean);
+    const out = $("#module-list"), status = $("#catalog-status");
+    const clear = $("#clear-search");
+    clear.hidden = !query;
+    if (!terms.length) {
+      status.textContent = "";
+      out.className = "catalog-grid";
       out.innerHTML = modules.map(card).join("");
       return;
     }
     const matches = [];
-    for (const m of modules) {
-      if (fold("Módulo " + m.number + " " + m.title).includes(value))
-        matches.push(
-          '<a class="result" href="' +
-            modLink(m.number) +
-            '"><span class="meta">Módulo ' +
-            m.number +
-            '</span><span class="rowtitle">' +
-            esc(m.title) +
-            "</span></a>",
-        );
-      for (const a of m.items)
-        if (fold(a.id + " " + a.title).includes(value))
-          matches.push(
-            '<a class="result" href="' +
-              link(a) +
-              '"><span class="meta">Módulo ' +
-              m.number +
-              " · " +
-              esc(a.id) +
-              '</span><span class="rowtitle">' +
-              esc(a.title) +
-              "</span></a>",
-          );
+    function match(text) {
+      const normalizedText = fold(text);
+      return terms.every((term) => normalizedText.includes(term));
     }
-    out.className = "panel";
-    out.innerHTML = matches.length
-      ? matches.join("")
-      : '<p class="empty">No se han encontrado módulos ni apartados con ese nombre.</p>';
+    function resultLink(url, context, title, symbol) {
+      return `<a class="catalog-result" href="${url}"><span class="result-icon">${icon(symbol)}</span>
+        <div><span class="meta">${esc(context)}</span><strong>${esc(title)}</strong></div></a>`;
+    }
+    for (const m of modules) {
+      if (match("Módulo " + m.number + " " + m.title))
+        matches.push(resultLink(modLink(m.number), "Módulo " + m.number, m.title, "layers"));
+      for (const a of m.items) {
+        const name = itemName(a);
+        if (match("Apartado " + a.id + " " + a.title))
+          matches.push(resultLink(link(a), "Módulo " + m.number + " · " + m.title, name, "book"));
+      }
+    }
+    status.textContent = matches.length === 1 ? "1 resultado" : matches.length + " resultados";
+    out.className = "catalog-results";
+    out.innerHTML = matches.length ? matches.join("") :
+      '<p class="catalog-empty">Prueba con otro título o con el número del apartado.</p>';
+  }
+  function resumeLink(a) {
+    if (a.isFinal || !a.questions || !done(a.questions)) return link(a);
+    const next = a.questions.findIndex((q) => !response(q));
+    return next < 0 ? link(a) : practiceLink(a, next + 1);
   }
   function home() {
     nav("home");
     crumb("Vista general");
-    const last = items.get(lastId)?.a;
-    main.innerHTML =
-      `<section class="hero"><div><p class="eyebrow">Economía · CV-0303</p><h1>Fundamentos<br>de Economía</h1><p class="hero-sub">${modules.length} módulos · 102 apartados de estudio · ${questions.size} preguntas</p><a class="button light" href="` +
-      (last?.questions ? link(last) : modLink(modules[0].number)) +
-      '">' +
-      icon("book") +
-      (last ? "Continuar estudio" : "Empezar a estudiar") +
-      '</a></div><a class="hero-art" href="#apartado/4.7" aria-label="Estudiar el equilibrio de mercado, apartado 4.7"><img src="assets/mercado.svg" alt="Curvas de oferta y demanda que se cruzan en el equilibrio E"><small>Equilibrio de mercado · Apartado 4.7</small></a></section>' +
-      progressCard([...questions.values()]) +
-      '<section><div class="section-head"><h2>Módulos del curso</h2><label class="searchbox">' +
-      icon("search") +
-      '<input type="search" id="find" placeholder="Buscar módulo o apartado" aria-label="Buscar módulo o apartado" value="' +
-      esc(query) +
-      '"></label></div><div id="module-list"></div></section>';
+    const last = items.get(lastId);
+    const first = modules[0].items.find((a) => a.questions);
+    const sectionCount = [...items.values()].filter(({a}) => a.questions && !a.isFinal).length;
+    main.innerHTML = `<div class="desk-home">
+      <section class="course-cover" aria-labelledby="course-title">
+        <div class="cover-copy"><p class="cover-code">Curso CV-0303</p>
+          <h1 id="course-title">Fundamentos <em>de Economía</em></h1>
+          <p class="cover-stats">${modules.length} módulos <span aria-hidden="true">·</span> ${sectionCount} apartados</p>
+          <div class="cover-action"><a class="button" href="${resumeLink(last?.a || first)}">${icon("book")}
+            ${last ? "Continuar estudio" : "Empezar a estudiar"}</a>
+            ${last ? `<span>Módulo ${last.m.number} · ${last.a.isFinal ? "Caso final" : "Apartado " + esc(last.a.id)}</span>` : ""}
+          </div></div>
+        <a class="cover-figure" href="#apartado/4.7" aria-label="Estudiar el equilibrio de mercado en el apartado 4.7">
+          <img src="assets/mercado.svg" alt="Curvas de oferta y demanda en equilibrio" width="350" height="198">
+          <span class="cover-caption">Equilibrio de mercado <b>4.7</b></span>
+          <span class="cover-compact-caption">${icon("trend")} Gráfico 4.7</span>
+        </a>
+      </section>
+      ${progressCard([...questions.values()])}
+      <section id="catalogo" class="course-catalog" aria-labelledby="catalog-title">
+        <div class="catalog-heading"><h2 id="catalog-title">Módulos del curso</h2>
+          <div class="catalog-search">${icon("search")}
+            <input type="search" id="find" placeholder="Buscar módulo o apartado"
+              aria-label="Buscar módulo o apartado" value="${esc(query)}" autocomplete="off">
+            <button type="button" id="clear-search" aria-label="Borrar búsqueda" hidden>×</button>
+          </div></div>
+        <p id="catalog-status" role="status" aria-live="polite"></p><div id="module-list"></div>
+      </section></div>`;
+    $("#clear-search").addEventListener("click", () => {
+      query = "";
+      $("#find").value = "";
+      results();
+      $("#find").focus();
+    });
     results();
   }
   function itemName(a) {
     return /^\d/.test(a.id) ? a.id + ". " + a.title : a.title;
   }
-  function modulePage(m) {
+  const solutionLink = (a) => "#solucionario/" + encodeURIComponent(a.id);
+  const practiceLink = (a, number) => link(a) + "/practica/" + number;
+
+  function courseSequence(m, a, solutions = false, questionNumber = 0) {
+    const index = m.items.indexOf(a);
+    const previous = m.items.slice(0, index).reverse().find((item) => item.questions);
+    const next = m.items.slice(index + 1).find((item) => item.questions);
+    const getLink = solutions ? solutionLink : link;
+    const position = modules.indexOf(m);
+    const previousModule = modules[position - 1];
+    const nextModule = modules[position + 1];
+    let back, forward;
+    if (questionNumber > 1) back = [practiceLink(a, questionNumber - 1), "Pregunta anterior"];
+    else if (questionNumber) back = [link(a), "Volver a la lectura"];
+    else if (previous) back = [getLink(previous), "Apartado anterior"];
+    else if (!solutions) back = [modLink(m.number), "Índice del módulo"];
+    else if (previousModule) {
+      const last = previousModule.items.filter((item) => item.questions).at(-1);
+      back = [solutionLink(last), "Módulo anterior"];
+    }
+    if (questionNumber && questionNumber < a.questions.length) forward = [practiceLink(a, questionNumber + 1), "Siguiente pregunta"];
+    else if (next) forward = [getLink(next), "Siguiente apartado"];
+    else if (nextModule) forward = [solutions ? "#solucionario/" + nextModule.number : modLink(nextModule.number), "Siguiente módulo"];
+    else forward = ["#respuestas", "Mis respuestas"];
+    return `<nav class="study-pager" aria-label="Continuar el estudio">
+      ${back ? `<a class="quiet" href="${back[0]}" rel="prev">${back[1]}</a>` : ""}
+      <a class="button" href="${forward[0]}" rel="next">${forward[1]}</a>
+    </nav>`;
+  }
+
+  function sectionPicker(m, a, solutions = false) {
+    const study = m.items.filter((item) => item.questions);
+    const notes = m.items.filter((item) => !item.questions);
+    const options = (list) => list.map((item) =>
+      `<option value="${esc(item.id)}"${item === a ? " selected" : ""}>${esc(itemName(item))}</option>`
+    ).join("");
+    return `<label class="reader-picker">${icon("layers")}<span>Apartados</span>
+      <select ${solutions ? "data-solution-jump" : 'id="item-select"'} aria-label="Cambiar de apartado">
+        <optgroup label="Apartados de estudio">${options(study)}</optgroup>
+        ${!solutions && notes.length ? `<optgroup label="Notas del temario">${options(notes)}</optgroup>` : ""}
+      </select></label>`;
+  }
+
+  function modulePage(m, a, questionNumber) {
     nav("", m.number);
     crumb("Módulo " + m.number);
-    const position = modules.indexOf(m);
-    const previous = modules[position - 1], next = modules[position + 1];
-    const links =
-      (previous ? `<a href="${modLink(previous.number)}" rel="prev">Módulo anterior</a>` : "") +
-      (next ? `<a href="${modLink(next.number)}" rel="next">Siguiente módulo</a>` :
-        '<a href="#respuestas">Revisar respuestas</a>');
-    const options = m.items.map(a =>
-      `<option value="${esc(a.id)}">${esc(itemName(a))}</option>`
-    ).join("");
-    main.innerHTML = `<div class="module-heading">
-        <span class="eyebrow kicker">Módulo ${m.number} de ${modules.length}</span>
-        <nav class="module-links" aria-label="Navegación entre módulos">${links}</nav>
-      </div>
+    if (a) {
+      main.innerHTML = `<div class="study-reader"><div class="reader-tools">
+        <a class="reader-return" href="${modLink(m.number)}">${icon("book")} Módulo ${m.number}</a>
+        ${sectionPicker(m, a)}
+      </div>${unitSection(a, questionNumber)}${courseSequence(m, a, false, questionNumber)}</div>`;
+      return;
+    }
+    const study = m.items.filter((item) => item.questions);
+    const notes = m.items.filter((item) => !item.questions);
+    const last = study.find((item) => item.id === lastId);
+    const start = last || study.find((item) => done(item.questions) < item.questions.length) || study[0];
+    const rows = study.map((item) => {
+      const count = done(item.questions);
+      return `<li><a class="syllabus-row" href="${link(item)}">
+        <span class="syllabus-code${count === item.questions.length ? " complete" : ""}">${item.isFinal ? icon("target") : esc(item.id)}</span>
+        <span class="syllabus-copy"><strong>${esc(item.isFinal ? "Pregunta final" : item.title)}</strong>
+        <small>${count ? unitCount(item) : item.isFinal ? "Caso integrador" : item.questions.length + " preguntas"}</small></span>
+        <span class="syllabus-marker" aria-hidden="true"></span></a></li>`;
+    }).join("");
+    main.innerHTML = `<div class="study-reader"><header class="study-heading">
+      <p class="eyebrow kicker">Módulo ${m.number} de ${modules.length}</p>
       <h1 class="page-title">${esc(m.title)}</h1>
-      ${progressCard(m.questions)}
-      <div class="module-index"><label class="section-menu">
-        <span>Índice del módulo</span>
-        <select id="item-select"><option value="" disabled selected>Ir a un apartado…</option>${options}</select>
-      </label></div>
-      ${m.items.map(unitSection).join("")}
-      <nav class="module-links module-footer" aria-label="Navegación entre módulos">${links}</nav>`;
+      <p class="study-meta">${study.length - 1} apartados · ${m.questions.length} preguntas</p>
+      <a class="button" href="${link(start)}">${icon("book")}${last || done(m.questions) ? "Continuar módulo" : "Empezar módulo"}</a>
+      </header>${progressCard(m.questions)}
+      <section aria-labelledby="syllabus-title"><h2 class="study-subtitle" id="syllabus-title">Índice del módulo</h2>
+      <ol class="syllabus-list">${rows}</ol></section>
+      ${notes.length ? `<details class="syllabus-notes"><summary>Notas del temario (${notes.length})</summary>
+        <ul>${notes.map((item) => `<li><a href="${link(item)}">${esc(itemName(item))}</a></li>`).join("")}</ul></details>` : ""}
+      <nav class="study-pager" aria-label="Navegación entre módulos">
+        ${m.number > 1 ? `<a class="quiet" href="${modLink(m.number - 1)}">Módulo anterior</a>` : ""}
+        ${m.number < modules.length ? `<a class="button" href="${modLink(m.number + 1)}">Siguiente módulo</a>` : '<a class="button" href="#respuestas">Mis respuestas</a>'}
+      </nav></div>`;
   }
   function questionCard(q, num, solutionOpen = false) {
     const d = draft(q),
       isLong = q.type === "desarrollo";
     const qid = esc(q.id),
       titleId = "title-" + qid;
-    const heading = q.type === "final" ? "h3" : "h4";
+    const heading = q.type === "final" ? "h2" : "h3";
     let field = "";
     if (q.type === "comprension") {
       field =
@@ -470,54 +519,53 @@
     if (a.isFinal) return done(a.questions) ? "Respondida" : "Pendiente";
     return done(a.questions) + " de " + a.questions.length + " respondidas";
   }
-  function unitSection(a) {
-    const opening = `<section class="study-unit${a.questions ? "" : " unit-note"}"
-      id="apartado-${esc(encodeURIComponent(a.id))}" data-unit="${esc(a.id)}" tabindex="-1">
-      <h2 class="unit-title">${esc(itemName(a))}</h2>`;
-    if (!a.questions) return opening + "<p>" + esc(a.note) + "</p></section>";
-    if (a.isFinal) return opening + '<span class="meta" data-unit-progress aria-live="polite">' +
-      unitCount(a) + '</span>' + questionCard(a.questions[0], 1) + '</section>';
-    return opening +
-      '<div class="meta">Compendio, p. ' +
-      a.page +
-      " · Lectura de origen, pp. " +
-      esc(a.source) +
-      ' · <a href="assets/compendio-color.pdf#page=' +
-      a.page +
-      '" target="_blank" rel="noopener">Ver página en PDF</a></div>' +
-      '<section class="read-card"><h3>Ideas clave</h3>' +
-      a.ideas.map((s) => "<p>" + esc(s) + "</p>").join("") +
-      (a.table
-        ? "<table><thead><tr>" +
-          a.table[0]
-            .map((c) => '<th scope="col">' + esc(c) + "</th>")
-            .join("") +
-          "</tr></thead><tbody>" +
-          a.table
-            .slice(1)
-            .map(
-              (r) =>
-                "<tr>" +
-                r.map((c) => "<td>" + esc(c) + "</td>").join("") +
-                "</tr>",
-            )
-            .join("") +
-          "</tbody></table>"
-        : "") +
-      (a.figure
-        ? '<button class="figure-btn" data-zoom="' +
-          esc(a.id) +
-          '" aria-label="Ampliar gráfico"><img width="500" height="150" loading="lazy" src="' +
-          esc(a.figure.src) +
-          '" alt="' +
-          esc(a.figure.alt) +
-          '"></button>'
-        : "") +
-      "</section>" +
-      '<section class="practice"><div class="section-head"><h3>Preguntas del apartado</h3><span class="meta" data-unit-progress aria-live="polite">' +
-      unitCount(a) + "</span></div>" +
-      a.questions.map((q, k) => questionCard(q, k + 1)).join("") +
-      "</section></section>";
+  function practiceMarkup(a, number) {
+    const q = a.questions[number - 1];
+    return `<section class="practice" aria-label="Práctica del apartado">
+      <div class="practice-heading"><h2 id="current-question" tabindex="-1">Pregunta ${number} de ${a.questions.length}</h2>
+        <span class="meta" data-unit-progress aria-live="polite">${unitCount(a)}</span></div>
+      <nav class="question-steps" aria-label="Elegir pregunta">${a.questions.map((item, i) => {
+        const answered = Boolean(response(item));
+        return `<a href="${practiceLink(a, i + 1)}" data-step="${esc(item.id)}" class="${answered ? "answered" : ""}"
+          aria-label="Pregunta ${i + 1}${answered ? ", respondida" : ""}"${i + 1 === number ? ' aria-current="step"' : ""}>${i + 1}</a>`;
+      }).join("")}</nav>
+      ${questionCard(q, number)}</section>`;
+  }
+
+  function readingMarkup(a, practiceUrl) {
+    const table = a.table ? `<div class="reading-table"><table><thead><tr>
+      ${a.table[0].map((cell) => `<th scope="col">${esc(cell)}</th>`).join("")}</tr></thead>
+      <tbody>${a.table.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></div>` : "";
+    const figure = a.figure ? `<button class="figure-btn" data-zoom="${esc(a.id)}">
+        <img loading="lazy" src="${esc(a.figure.src)}" alt="${esc(a.figure.alt)}">
+        <span>${icon("search")} Ampliar gráfico</span></button>` : "";
+    return `<section class="read-card"><h2 class="study-subtitle">Ideas clave</h2>
+      ${a.ideas.map((idea) => `<p>${esc(idea)}</p>`).join("")}${table}${figure}
+      <footer class="reading-sources"><span>Lectura de origen, pp. ${esc(a.source)}</span>
+        <a href="assets/compendio-color.pdf#page=${a.page}" target="_blank" rel="noopener">${icon("book")} Compendio, p. ${a.page}</a></footer></section>
+      <a class="button practice-start" href="${practiceUrl}">${icon("edit")} Practicar este apartado</a>`;
+  }
+
+  function unitSection(a, questionNumber) {
+    const code = a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id);
+    const header = `<p class="eyebrow kicker">${code}</p><h1 class="page-title">${esc(a.title)}</h1>`;
+    let body;
+    if (!a.questions) {
+      body = `<p class="note-content">${esc(a.note)}</p>`;
+    } else if (a.isFinal) {
+      body = `<div class="practice-heading"><span class="meta" data-unit-progress aria-live="polite">${unitCount(a)}</span></div>
+        ${questionCard(a.questions[0], 1)}`;
+    } else {
+      const firstPending = a.questions.findIndex((q) => !response(q)) + 1;
+      const practiceUrl = practiceLink(a, questionNumber || firstPending || 1);
+      body = `<nav class="reader-tabs" aria-label="Actividad del apartado">
+        <a href="${link(a)}"${!questionNumber ? ' aria-current="page"' : ""}>${icon("book")} Lectura</a>
+        <a href="${practiceUrl}"${questionNumber ? ' aria-current="page"' : ""}>${icon("edit")} Práctica</a>
+        </nav>${questionNumber ? practiceMarkup(a, questionNumber) : readingMarkup(a, practiceUrl)}`;
+    }
+    return `<section class="study-unit current-unit" id="apartado-${esc(encodeURIComponent(a.id))}" data-unit="${esc(a.id)}">
+      ${header}${body}</section>`;
   }
   function report() {
     const result = {
@@ -571,53 +619,50 @@
     }
     return result;
   }
-  function reviewOutline() {
-    if (!answered() && !showPending)
-      return (
-        '<div class="empty">Aún no has respondido ninguna pregunta. <a class="link" href="' +
-        modLink(modules[0].number) +
-        '">Abrir el primer módulo</a></div>'
-      );
-    return modules
-      .filter((m) => showPending || done(m.questions))
-      .map(
-        (m) =>
-          '<details class="review-group"><summary>Módulo ' +
-          m.number +
-          " · " +
-          esc(m.title) +
-          " (" +
-          done(m.questions) +
-          " de " +
-          m.questions.length +
-          ")</summary>" +
-          m.items
-            .filter((a) => a.questions && (showPending || done(a.questions)))
-            .map(
-              (a) =>
-                '<h3><a class="link" href="' +
-                link(a) +
-                '">' +
-                esc(itemName(a)) +
-                "</a></h3>" +
-                a.questions
-                  .filter((q) => showPending || response(q))
-                  .map(
-                    (q) =>
-                      caseMarkup(q) + "<h4>" +
-                      esc(q.prompt) +
-                      '</h4><div class="answer-preview">' +
-                      (response(q)
-                        ? esc(response(q))
-                        : '<span class="meta">Pendiente</span>') +
-                      "</div>",
-                  )
-                  .join(""),
-            )
-            .join("") +
-          "</details>",
-      )
-      .join("");
+  function reviewOutline(filter = "answered") {
+    const matches = (q) => {
+      if (filter === "all") return true;
+      if (filter === "errors") return choiceGrade(q) === false;
+      if (filter === "written") return draft(q).mode === "texto" && Boolean(response(q));
+      return Boolean(response(q));
+    };
+    const groups = [];
+    for (const m of modules) {
+      const sections = [];
+      for (const a of m.items) {
+        if (!a.questions) continue;
+        const selected = a.questions.filter(matches);
+        if (selected.length) sections.push({ a, selected });
+      }
+      if (sections.length) groups.push({ m, sections });
+    }
+    if (!groups.length) {
+      const message = filter === "errors" ? "No tienes respuestas incorrectas." :
+        filter === "written" ? "Aún no tienes respuestas escritas." : "Aún no has respondido ninguna pregunta.";
+      const item = items.get(lastId)?.a || modules[0].items.find((a) => a.questions);
+      return `<div class="review-empty">${icon("sheet")}<p>${message}</p>
+        <a class="link" href="${resumeLink(item)}">${lastId ? "Continuar estudio" : "Empezar a estudiar"}</a></div>`;
+    }
+    return groups.map(({ m, sections }) => {
+      const total = sections.reduce((n, s) => n + s.selected.length, 0);
+      return `<details class="review-module" ${groups.length === 1 ? "open" : ""}>
+        <summary><span><small>Módulo ${m.number}</small><strong>${esc(m.title)}</strong></span>
+          <span class="review-tally">${total}<span class="sr"> preguntas</span></span></summary>
+        <div class="review-units">${sections.map(({ a, selected }) =>
+          `<details class="review-unit" ${sections.length === 1 ? "open" : ""}>
+            <summary>${esc(itemName(a))}</summary><div class="review-unit-body">
+            ${selected.map((q) => {
+              const answer = response(q), grade = choiceGrade(q);
+              const verdict = !answer ? "Pendiente" : grade === null ? "Respuesta escrita" : grade ? "Correcta" : "Incorrecta";
+              const url = a.isFinal ? link(a) : practiceLink(a, a.questions.indexOf(q) + 1);
+              return `<article class="review-entry"><span class="review-verdict${grade === false ? " error" : ""}">${verdict}</span>
+                ${caseMarkup(q)}<h4>${esc(q.prompt)}</h4>
+                ${answer ? `<p class="answer-preview">${esc(answer)}</p>` : ""}
+                <a class="link review-edit" href="${url}">${icon("edit")} ${answer ? "Revisar respuesta" : "Responder"}</a></article>`;
+            }).join("")}
+            </div></details>`
+        ).join("")}</div></details>`;
+    }).join("");
   }
   function readImportedAnswers(data) {
     if (data?.version !== 1 || data.codigo !== "CV-0303" ||
@@ -693,39 +738,45 @@
     nav("answers");
     crumb("Mis respuestas");
     const count = answered();
-    main.innerHTML =
-      '<div class="eyebrow kicker">Cuaderno personal</div><h1 class="page-title">Mis respuestas</h1><p>' +
-      count +
-      " de " +
-      questions.size +
-      ' preguntas respondidas.</p>' +
-      scorePanel() +
-      '<section class="panel"><h2>Descargar respuestas</h2><p>El documento reúne tus respuestas con su enunciado, módulo y apartado. Puedes compartirlo con la IA que elijas para la corrección.</p>' +
-      '<label class="export-options"><input type="checkbox" id="models" ' +
-      (includeModels ? "checked" : "") +
-      '>Añadir las respuestas de referencia del solucionario para la evaluación</label><label class="export-options"><input type="checkbox" id="pending" ' +
-      (showPending ? "checked" : "") +
-      ">Incluir las preguntas pendientes</label>" +
-      '<div class="actions"><button class="button" data-format="docx" ' +
-      (!count && !showPending ? "disabled" : "") +
-      ">" +
-      icon("download") +
-      'Descargar Word (.docx)</button><button class="button line" data-format="json" ' +
-      (!count && !showPending ? "disabled" : "") +
-      ">" +
-      icon("download") +
-      "Descargar JSON</button></div></section>" +
-      (window.nube?.ready ? `<section class="panel" id="import-answers">
-        <h2>Importar respuestas anteriores</h2>
-        <p>Elige el JSON descargado desde tu cuaderno local. Se añadirán las respuestas a preguntas que aún no tienen borrador en esta cuenta.</p>
-        <label class="field-label" for="import-file">Archivo de respuestas (.json)</label>
-        <input type="file" id="import-file" accept=".json,application/json">
-        <p role="status" aria-live="polite"></p>
-        <button type="button" class="button line" disabled>Confirmar importación</button>
-      </section>` : "") +
-      '<section class="panel"><h2>Revisar por módulo</h2><div id="review-outline">' +
-      reviewOutline() +
-      "</div></section>";
+    const filter = $("#review-filter")?.value || "answered";
+    main.innerHTML = `<div class="desk-review">
+      <header class="review-heading"><p class="eyebrow kicker">Cuaderno personal</p>
+        <h1 class="page-title">Mis respuestas</h1>
+        <p>${count} de ${questions.size} preguntas respondidas</p></header>
+      ${scorePanel()}
+      <div class="review-layout"><section class="panel review-list">
+        <h2>Revisar por módulo</h2>
+        <label class="review-filter">Mostrar <select id="review-filter">
+          <option value="answered">Preguntas respondidas</option>
+          <option value="errors">Respuestas incorrectas</option>
+          <option value="written">Respuestas escritas</option>
+          <option value="all">Todas las preguntas</option>
+        </select></label>
+        <div id="review-outline">${reviewOutline(filter)}</div>
+      </section>
+      <aside class="review-files" aria-label="Archivos de respuestas">
+        <details class="file-panel"><summary>${icon("download")} Descargar respuestas</summary>
+          <div class="file-body"><p>Guarda el cuaderno en Word para leerlo o en JSON para importarlo o evaluarlo.</p>
+            <label class="export-options"><input type="checkbox" id="models" ${includeModels ? "checked" : ""}>Incluir las respuestas de referencia</label>
+            <label class="export-options"><input type="checkbox" id="pending" ${showPending ? "checked" : ""}>Incluir las preguntas pendientes</label>
+            <div class="actions">
+              <button class="button" data-format="docx" ${!count && !showPending ? "disabled" : ""}>Descargar Word (.docx)</button>
+              <button class="button line" data-format="json" ${!count && !showPending ? "disabled" : ""}>Descargar JSON</button>
+            </div></div></details>
+        ${window.nube?.ready ? `<details class="file-panel" id="import-answers">
+          <summary>${icon("sheet")} Importar respuestas</summary>
+          <div class="file-body"><p>Elige un JSON de este curso. Se añadirán las respuestas a preguntas que aún no tengan borrador en tu cuenta.</p>
+            <label class="field-label" for="import-file">Archivo de respuestas (.json)</label>
+            <input type="file" id="import-file" accept=".json,application/json">
+            <p role="status" aria-live="polite"></p>
+            <button type="button" class="button line" disabled>Confirmar importación</button>
+          </div></details>` : ""}
+      </aside></div></div>`;
+    const selector = $("#review-filter");
+    selector.value = filter;
+    selector.addEventListener("change", () => {
+      $("#review-outline").innerHTML = reviewOutline(selector.value);
+    });
     const importPanel = $("#import-answers");
     if (importPanel) attachImport(importPanel);
   }
@@ -760,137 +811,112 @@
     timer = setTimeout(() => $("#notice").classList.remove("show"), 2300);
   }
   function closeNav() {
+    if (!document.body.classList.contains("nav-open")) return;
     document.body.classList.remove("nav-open");
     $("#shade").hidden = true;
     $("#open-nav").setAttribute("aria-expanded", "false");
+    $("#sidebar").setAttribute("role", "complementary");
+    $("#sidebar").removeAttribute("aria-modal");
+    $(".shell").inert = false;
+    $(".skip").inert = false;
   }
   function solutionSection(a) {
     const answers = a.questions.map((q, i) => {
-      const isEssay = q.type === "desarrollo";
       const options = q.type === "final" ? '<ol type="A" class="case-options">' +
         q.options.map((opt) => "<li>" + esc(opt) + "</li>").join("") + "</ol>" : "";
-      return `<article class="q-card" data-solution-id="${esc(q.id)}">
-        <span class="eyebrow">${q.type === "final" ? "Caso integrador" : questionLabel(q, i + 1)}</span>${caseMarkup(q)}<h3>${esc(q.prompt)}</h3>${options}
-        <strong>${isEssay ? "Modelo de respuesta" : "Respuesta correcta"}</strong>
-        ${answerMarkup(q)}
-      </article>`;
+      return `<details class="solution-entry" data-solution-id="${esc(q.id)}"${i === 0 ? " open" : ""}>
+        <summary><span><small class="eyebrow">${q.type === "final" ? "Caso integrador" : questionLabel(q, i + 1)}</small>
+          <strong>${esc(q.prompt)}</strong></span></summary>
+        <div class="solution-answer">${caseMarkup(q)}${options}
+          <h2>${q.type === "desarrollo" ? "Modelo de respuesta" : "Respuesta correcta"}</h2>${answerMarkup(q)}</div>
+        </details>`;
     }).join("");
-    return `<section class="study-unit" id="solucion-${esc(encodeURIComponent(a.id))}" tabindex="-1" aria-labelledby="solucion-titulo-${esc(a.id)}">
-      <div class="section-head"><h2 class="unit-title" id="solucion-titulo-${esc(a.id)}">${esc(itemName(a))}</h2>
-        <a class="quiet" href="${link(a)}">Practicar este apartado</a></div>
-      ${answers}
-    </section>`;
+    return `<section id="solucion-${esc(encodeURIComponent(a.id))}" aria-labelledby="solution-heading">
+      <p class="eyebrow kicker">${a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id)}</p>
+      <h1 class="page-title" id="solution-heading">${esc(a.title)}</h1>
+      <a class="solution-practice" href="${a.isFinal ? link(a) : practiceLink(a, 1)}">${icon("edit")} Practicar este apartado</a>
+      ${answers}</section>`;
   }
-  function solutionPage(m) {
+  function solutionPage(m, current) {
     nav("solutions");
-    crumb("Solucionario · Módulo " + m.number);
-    const sections = m.items.filter((a) => a.questions);
-    const moduleOptions = modules.map((module) =>
+    crumb("Solucionario");
+    const a = current || m.items.find((item) => item.questions);
+    const options = modules.map((module) =>
       `<option value="${module.number}"${module === m ? " selected" : ""}>${module.number}. ${esc(module.title)}</option>`
     ).join("");
-    const sectionOptions = sections.map((a) =>
-      `<option value="${esc(a.id)}">${esc(itemName(a))}</option>`
-    ).join("");
-    const position = modules.indexOf(m);
-    const previous = modules[position - 1], next = modules[position + 1];
-    const essays = m.questions.filter((q) => q.type === "desarrollo").length;
-    const comprehension = m.questions.filter((q) => q.type === "comprension").length;
-    main.innerHTML = `<div class="eyebrow kicker">Solucionario · Módulo ${m.number}</div>
-      <h1 class="page-title">${esc(m.title)}</h1>
-      <p>${comprehension} respuestas de comprensión · ${essays} modelos de desarrollo · 1 pregunta final resuelta</p>
-      <label class="section-menu"><span class="meta">Módulo</span><select data-solution-select>${moduleOptions}</select></label>
-      <div class="module-index"><label class="section-menu"><span>Ir a un apartado</span><select data-solution-jump><option value="">Seleccionar apartado</option>${sectionOptions}</select></label></div>
-      ${sections.map(solutionSection).join("")}
-      <nav class="split section-foot" aria-label="Módulos del solucionario">
-        ${previous ? `<a class="quiet" href="#solucionario/${previous.number}">Módulo anterior</a>` : "<span></span>"}
-        ${next ? `<a class="button" href="#solucionario/${next.number}">Siguiente módulo</a>` : '<a class="button" href="#respuestas">Mis respuestas</a>'}
-      </nav>`;
-    const select = main.querySelector("[data-solution-select]");
-    select.onchange = () => goToHash("#solucionario/" + select.value);
-    const jump = main.querySelector("[data-solution-jump]");
-    jump.onchange = () => {
-      const id = jump.value;
-      if (!id) return;
-      jump.value = "";
-      goToHash("#solucionario/" + encodeURIComponent(id));
-    };
+    main.innerHTML = `<div class="study-reader solution-reader"><div class="reader-tools">
+      <label class="reader-picker">${icon("book")}<span>Módulo ${m.number}</span>
+        <select data-solution-select aria-label="Cambiar de módulo en el solucionario">${options}</select></label>
+      ${sectionPicker(m, a, true)}</div>${solutionSection(a)}${courseSequence(m, a, true)}</div>`;
+    main.querySelector("[data-solution-select]").onchange = (event) => goToHash("#solucionario/" + event.target.value);
+    main.querySelector("[data-solution-jump]").onchange = (event) => goToHash("#solucionario/" + encodeURIComponent(event.target.value));
   }
   function goToHash(hash) {
     if (location.hash === hash) render(true);
     else location.hash = hash;
   }
   function locate() {
-    const [page, id] = location.hash.slice(1).split("/");
+    const [page, id, activity, step] = location.hash.slice(1).split("/");
     let item;
     try { item = items.get(decodeURIComponent(id || "")); } catch {}
     const m = modules.find((module) => String(module.number) === id);
-    if (page === "apartado" && item) return { page: "modulo", ...item };
+    if (page === "apartado" && item) {
+      const practice = activity === "practica" && item.a.questions && !item.a.isFinal;
+      const number = Number(step);
+      const questionNumber = practice
+        ? Number.isInteger(number) && number > 0 && number <= item.a.questions.length ? number : 1
+        : undefined;
+      return { page: "modulo", ...item, questionNumber };
+    }
     if (page === "modulo" && m) return { page, m };
-    if (page === "solucionario")
-      return item?.a.questions ? { page, ...item } : { page, m: m || modules[0] };
+    if (page === "solucionario") {
+      const section = id ? item : items.get(lastId);
+      return section?.a.questions ? { page, ...section } : { page, m: m || modules[0] };
+    }
     return { page: page === "respuestas" ? "respuestas" : "inicio" };
   }
-  let renderedPage, renderedModule, readingSections = [], scrollTimer;
+  let renderedPage, renderedRoute;
   function render(navigation = false) {
     if (cloud && !cloud.ready) return;
     closeNav();
     const route = locate();
-    const changed = renderedPage !== route.page || renderedModule !== route.m;
-    clearTimeout(scrollTimer);
+    const changed = renderedRoute !== location.hash;
     if (changed || !navigation) {
-      if (route.page === "modulo") modulePage(route.m);
+      if (route.page === "modulo") modulePage(route.m, route.a, route.questionNumber);
       else if (route.page === "respuestas") review();
-      else if (route.page === "solucionario") solutionPage(route.m);
+      else if (route.page === "solucionario") solutionPage(route.m, route.a);
       else home();
       renderedPage = route.page;
-      renderedModule = route.m;
-      readingSections = Array.from(main.querySelectorAll("[data-unit]"));
+      renderedRoute = location.hash;
     }
     document.title =
       (route.page === "solucionario" ? "Solucionario · " : "") +
+      (route.questionNumber ? "Pregunta " + route.questionNumber + " · " : "") +
       (route.a ? itemName(route.a) : route.m?.title ||
         (route.page === "respuestas" ? "Mis respuestas" : "Fundamentos de Economía")) + " · MBA Training";
-    if (navigation || changed) {
-      let target;
-      if (route.a) {
-        const prefix = route.page === "modulo" ? "apartado-" : "solucion-";
-        target = document.getElementById(prefix + encodeURIComponent(route.a.id));
+    if (route.page === "modulo" && route.a?.questions) remember(route.a.id);
+    if (navigation) {
+      const practiceHeading = route.questionNumber && main.querySelector("#current-question");
+      if (practiceHeading) {
+        practiceHeading.focus({ preventScroll: true });
+        practiceHeading.scrollIntoView({ block: "start", behavior: "instant" });
+      } else {
+        main.focus({ preventScroll: true });
+        window.scrollTo({ top: 0, behavior: "instant" });
       }
-      if (route.page === "modulo") {
-        const start = route.a || route.m.items.find((item) => item.questions);
-        if (start?.questions) remember(start.id);
-      }
-      if (navigation) (target || main).focus({ preventScroll: true });
-      if (target) target.scrollIntoView({ block: "start", behavior: "instant" });
-      else if (navigation) window.scrollTo({ top: 0, behavior: "instant" });
     }
   }
-  window.addEventListener("scroll", () => {
-    if (!readingSections.length) return;
-    clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(() => {
-      const mark = window.innerHeight / 3;
-      const active = readingSections.find((section) => section.getBoundingClientRect().bottom > mark);
-      if (!active || active.getBoundingClientRect().top > mark) return;
-      const id = active.dataset.unit;
-      if (items.get(id).a.questions) remember(id);
-    }, 180);
-  }, { passive: true });
-  main.addEventListener("focusin", (event) => {
-    const section = event.target.closest("[data-unit]");
-    if (section && items.get(section.dataset.unit).a.questions) remember(section.dataset.unit);
-  });
-  function updateCount(card) {
-    const section = card.closest("[data-unit]");
-    const { a, m } = items.get(section.dataset.unit);
+  function updateUnitProgress(section, q) {
+    const { a } = items.get(section.dataset.unit);
     const counter = $("[data-unit-progress]", section);
     const label = unitCount(a);
-    if (counter.textContent === label) return;
-    counter.textContent = label;
-    const count = done(m.questions);
-    $(".progress-card .progress-line .meta", main).textContent =
-      count + " de " + m.questions.length + " preguntas respondidas";
-    $(".progress-card .meter b", main).style.width = (100 * count / m.questions.length) + "%";
+    if (counter.textContent !== label) counter.textContent = label;
+    const step = section.querySelector('[data-step="' + CSS.escape(q.id) + '"]');
+    if (step) {
+      const answered = Boolean(response(q));
+      step.classList.toggle("answered", answered);
+      step.setAttribute("aria-label", "Pregunta " + step.textContent + (answered ? ", respondida" : ""));
+    }
   }
   function redrawCard(card, q, focusSel) {
     const { a } = items.get(card.closest("[data-unit]").dataset.unit);
@@ -899,12 +925,19 @@
     const fresh = wrap.firstElementChild;
     card.replaceWith(fresh);
     if (focusSel) $(focusSel, fresh)?.focus({ preventScroll: true });
-    updateCount(fresh);
+    updateUnitProgress(fresh.closest("[data-unit]"), q);
   }
   function refreshDraft(q) {
     const card = main.querySelector('[data-q="' + CSS.escape(q.id) + '"]');
     if (card) redrawCard(card, q);
-    else if (renderedPage === "inicio" || renderedPage === "respuestas") render();
+    else if (renderedPage !== "solucionario") {
+      const section = main.querySelector("[data-unit]");
+      if (!section) render();
+      else if (items.get(section.dataset.unit).a.questions?.includes(q)) {
+        if (section.querySelector("[data-unit-progress]")) updateUnitProgress(section, q);
+        else render();
+      }
+    }
   }
   main.addEventListener("input", (e) => {
     if (e.target.id === "find") {
@@ -919,22 +952,18 @@
     save(q, { ...d, text: e.target.value, mode: "texto" });
     $("[data-words]", card).textContent =
       wordCount(e.target.value) + " palabras";
-    updateCount(card);
+    updateUnitProgress(card.closest("[data-unit]"), q);
   });
   main.addEventListener("change", (e) => {
     if (e.target.id === "item-select") {
       if (!e.target.value) return;
       const hash = "#apartado/" + encodeURIComponent(e.target.value);
-      e.target.value = "";
       goToHash(hash);
       return;
     }
     if (["models", "pending"].includes(e.target.id)) {
       if (e.target.id === "models") includeModels = e.target.checked;
-      else {
-        showPending = e.target.checked;
-        $("#review-outline").innerHTML = reviewOutline();
-      }
+      else showPending = e.target.checked;
       main
         .querySelectorAll("[data-format]")
         .forEach((b) => (b.disabled = !answered() && !showPending));
@@ -963,6 +992,8 @@
         img = $("#figure-dialog img");
       img.src = fig.src;
       img.alt = fig.alt;
+      $("#figure-title").textContent = "Gráfico · " + button.dataset.zoom;
+      setFigureZoom(false);
       $("#figure-dialog").showModal();
       return;
     }
@@ -1005,16 +1036,36 @@
     document.body.classList.add("nav-open");
     $("#shade").hidden = false;
     toggle.setAttribute("aria-expanded", "true");
+    $("#sidebar").setAttribute("role", "dialog");
+    $("#sidebar").setAttribute("aria-modal", "true");
     $("#close-nav").focus();
+    $(".shell").inert = true;
+    $(".skip").inert = true;
   });
   $("#close-nav").onclick = $("#shade").onclick = () => {
     closeNav();
     toggle.focus();
   };
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && document.body.classList.contains("nav-open")) {
+    if (!document.body.classList.contains("nav-open")) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
       closeNav();
       toggle.focus();
+    }
+    if (e.key === "Tab") {
+      const links = [...$("#sidebar").querySelectorAll("a[href], button")].filter(el => el.getClientRects().length);
+      const target = e.shiftKey ? links.at(-1) : links[0];
+      if (document.activeElement === (e.shiftKey ? links[0] : links.at(-1))) {
+        e.preventDefault();
+        target.focus();
+      }
+    }
+  });
+  matchMedia("(max-width: 880px)").addEventListener("change", (e) => {
+    if (!e.matches && document.body.classList.contains("nav-open")) {
+      closeNav();
+      $("#sidebar .identity a").focus({ preventScroll: true });
     }
   });
   $("#navigation").addEventListener("click", (e) => {
@@ -1032,6 +1083,14 @@
       render(true);
     }
   });
+  function setFigureZoom(enlarged) {
+    const button = $("#figure-zoom");
+    $(".zoom-area").classList.toggle("enlarged", enlarged);
+    button.setAttribute("aria-pressed", String(enlarged));
+    button.textContent = enlarged ? "Ajustar" : "Ampliar";
+    $(".zoom-area").scrollTo(0, 0);
+  }
+  $("#figure-zoom").onclick = () => setFigureZoom(!$(".zoom-area").classList.contains("enlarged"));
   $(".close-dialog").onclick = () => $("#figure-dialog").close();
   $("#figure-dialog").addEventListener("click", (e) => {
     if (e.target === $("#figure-dialog")) $("#figure-dialog").close();
@@ -1042,6 +1101,7 @@
   window.addEventListener("hashchange", () => render(true));
   if (cloud) {
     cloud.start({
+      closeNav,
       hasQuestion: (id) => questions.has(id),
       load(values, last) {
         drafts.clear();
@@ -1059,8 +1119,7 @@
       },
       clear() {
         drafts.clear(); lastId = ""; query = ""; showPending = false; includeModels = true;
-        clearTimeout(scrollTimer);
-        readingSections = []; renderedModule = undefined; renderedPage = undefined;
+        renderedRoute = undefined; renderedPage = undefined;
         closeNav(); main.replaceChildren();
         $("#navigation").replaceChildren();
         $("#crumb").replaceChildren();
@@ -1068,5 +1127,9 @@
         $("#account-save").textContent = "";
       }
     });
-  } else render();
+  } else {
+    document.body.classList.remove("account-locked");
+    $("#auth-screen").hidden = true;
+    render();
+  }
 })();

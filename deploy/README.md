@@ -1,8 +1,18 @@
-# Despliegue por IPv4
+# Despliegue del aula
+
+## Actualizar producción
+
+El dominio `mba.statistics.plus` sirve la versión activa de `enderhost1`. Desde el repositorio local puedes publicar el árbol de trabajo con este comando.
+
+```sh
+deploy/publish.sh root@enderhost1
+```
+
+El script copia los archivos públicos y la API en una versión nueva de `/srv/mbatraining/releases`, guarda una copia SQLite antes de actualizar, verifica el catálogo, cambia el enlace `current` y comprueba que el servicio responda. El estado del usuario permanece fuera de cada versión.
+
+## Instalación por IPv4
 
 El servicio se aloja en Ubuntu 24.04, con nginx, systemd y Python 3.12. El aula utiliza el puerto 8443 y el puerto 80 sirve las comprobaciones HTTP-01 de la IP. Los nombres virtuales existentes en 443 conservan su configuración. El archivo SQLite vive en el volumen persistente del VPS, en `/var/lib/mbatraining/aula.sqlite3`, fuera del directorio público y de las versiones de la aplicación.
-
-## Instalación y actualización
 
 En un servidor con nginx, Python (módulo venv), pip, curl y UFW, copia este directorio y ejecuta como root, sustituyendo la IP por la asignada al VPS:
 
@@ -12,14 +22,6 @@ En un servidor con nginx, Python (módulo venv), pip, curl y UFW, copia este dir
 ```
 
 Los scripts configuran el usuario de servicio, instalan Certbot y Gunicorn en un entorno Python propio y habilitan HTTPS con un certificado de IP de Let's Encrypt. Solo se abre el nuevo puerto de la aplicación si UFW está activo. En una red con firewall adicional debe estar permitido el acceso público a 80 y 8443.
-
-Desde la carpeta local del proyecto se publica con:
-
-```sh
-deploy/publish.sh root@statistics.plus
-```
-
-El script copia los archivos públicos y la API en una versión nueva de `/srv/mbatraining/releases`, guarda una copia SQLite antes de actualizar, verifica el catálogo, cambia el enlace `current` y comprueba que el servicio responda. El estado del usuario permanece fuera de cada versión. Los archivos y plantillas de instalación no forman parte del sitio público.
 
 Para la primera cuenta ejecuta en el servidor, desde `/srv/mbatraining/current`:
 

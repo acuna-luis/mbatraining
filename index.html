@@ -2,74 +2,93 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#103e35" />
     <title>Fundamentos de Economía · MBA Training</title>
     <link rel="icon" href="assets/marca.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="aula.css?v=3" />
+    <link rel="stylesheet" href="aula.css?v=4" />
+    <link rel="stylesheet" href="escritorio.css?v=4" />
+    <link rel="stylesheet" href="estudio.css?v=4" />
+    <link rel="stylesheet" href="acceso.css?v=4" />
+    <noscript><style>
+      #auth-screen { display: none; }
+      body > noscript { display: block; max-width: 38rem; margin: 3rem auto; padding: 1.5rem; }
+      body > noscript a { text-decoration: underline; }
+    </style></noscript>
     <script defer src="data/curso.js"></script>
     <script defer src="data/referencias.js"></script>
     <script defer src="data/finales.js"></script>
     <script defer src="documento.js?v=2"></script>
-    <script defer src="nube.js?v=2"></script>
-    <script defer src="aula.js?v=3"></script>
+    <script defer src="nube.js?v=4"></script>
+    <script defer src="aula.js?v=4"></script>
   </head>
-  <body>
-    <section id="auth-screen" class="auth-screen" hidden aria-labelledby="auth-title">
-      <div class="auth-card">
-        <img src="assets/marca.svg" alt="MBA Training" width="44" height="44">
-        <p class="eyebrow">Fundamentos de Economía</p>
-        <h1 id="auth-title" class="auth-title">Iniciar sesión</h1>
-        <p>Entra para continuar con tus respuestas guardadas.</p>
-        <form id="auth-form">
-          <label>Usuario<input id="auth-name" type="text" required autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="80"></label>
-          <label>Contraseña<input id="auth-pass" type="password" required autocomplete="current-password"></label>
-          <fieldset id="auth-initial" hidden><legend>Activa tu cuenta</legend>
-            <label>Código de activación<input id="auth-token" type="password" autocomplete="off"></label>
-            <label>Nueva contraseña (mínimo 12 caracteres)<input id="auth-new" type="password" autocomplete="new-password" minlength="12"></label>
-          </fieldset>
-          <button id="auth-submit" class="button" type="submit">Entrar</button>
-        </form>
-        <p id="auth-status" role="status" aria-live="polite"></p>
-        <button id="auth-retry" class="quiet" type="button" hidden>Volver a conectar</button>
+  <body class="account-locked">
+    <div id="auth-screen" class="auth-screen" role="main" aria-labelledby="auth-title">
+      <div class="auth-book">
+        <div class="auth-cover">
+          <div class="auth-brand"><img src="assets/marca.svg" alt="" width="40" height="40"><span>MBA Training</span></div>
+          <p class="auth-course">Fundamentos<br> de Economía</p>
+          <img class="auth-figure" src="assets/mercado.svg" alt="" width="350" height="198">
+        </div>
+        <div class="auth-card">
+          <h1 id="auth-title" class="auth-title" tabindex="-1">Abriendo el aula</h1>
+          <p id="auth-intro"></p>
+          <form id="auth-form" method="post" hidden>
+            <div class="auth-field">
+              <label for="auth-name">Usuario</label>
+              <input id="auth-name" name="username" type="text" required autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="64" enterkeyhint="next">
+            </div>
+            <div class="auth-field">
+              <label for="auth-pass" id="auth-pass-label">Contraseña</label>
+              <div class="auth-secret">
+                <input id="auth-pass" name="password" type="password" required autocomplete="current-password">
+                <button type="button" data-password="auth-pass" aria-controls="auth-pass" aria-label="Mostrar contraseña">Mostrar</button>
+              </div>
+            </div>
+            <fieldset id="auth-initial" hidden disabled aria-label="Activación de cuenta">
+              <div class="auth-field" id="auth-code-field">
+                <label for="auth-token">Código de activación</label>
+                <input id="auth-token" type="password" autocomplete="off" autocapitalize="none" spellcheck="false">
+              </div>
+              <div class="auth-field">
+                <label for="auth-new">Nueva contraseña</label>
+                <div class="auth-secret">
+                  <input id="auth-new" name="new-password" type="password" autocomplete="new-password" minlength="12" aria-describedby="auth-new-hint">
+                  <button type="button" data-password="auth-new" aria-controls="auth-new" aria-label="Mostrar nueva contraseña">Mostrar</button>
+                </div>
+                <small id="auth-new-hint">Al menos 12 caracteres, distinta de la provisional.</small>
+              </div>
+            </fieldset>
+            <button id="auth-submit" class="button" type="submit">Entrar al cuaderno</button>
+          </form>
+          <p id="auth-status" role="status" aria-live="polite">Preparando tu cuaderno…</p>
+          <button id="auth-retry" class="quiet" type="button" hidden>Volver a conectar</button>
+          <button id="auth-mode" type="button" class="auth-mode" hidden>Activar mi cuenta</button>
+        </div>
       </div>
-    </section>
+    </div>
     <a class="skip" href="#main">Saltar al contenido</a>
-    <aside id="sidebar" aria-label="Navegación del cuaderno">
+    <div id="sidebar" role="complementary" aria-label="Navegación del cuaderno">
       <div class="identity">
-        <a href="#inicio"
-          ><img src="assets/marca.svg" width="40" height="40" alt="" /><span
-            >MBA Training<small>AULA DE ESTUDIO</small></span
-          ></a
-        ><button
-          id="close-nav"
-          class="icon-btn mobile"
-          aria-label="Cerrar menú"
-        >
-          ×
-        </button>
+        <a href="#inicio"><img src="assets/marca.svg" width="36" height="36" alt=""><span>MBA Training</span></a>
+        <button id="close-nav" class="icon-btn mobile" type="button" aria-label="Cerrar temario" data-icon="close"></button>
       </div>
       <nav id="navigation" aria-label="Curso"></nav>
       <div class="side-foot">
-        <span data-icon="save"></span>
-        <div>
-          <strong id="account-user">Cuaderno personal</strong
-          ><small id="account-save" role="status">Guardado en este navegador</small>
+        <span class="account-symbol" data-icon="user"></span>
+        <div class="account-details">
+          <strong id="account-user">Cuaderno personal</strong>
+          <small id="account-save" role="status">Guardado en este navegador</small>
         </div>
+        <div id="account-tools" hidden><button id="account-logout" type="button" class="icon-btn" aria-label="Cerrar sesión" title="Cerrar sesión" data-icon="logout"></button></div>
       </div>
-    </aside>
-    <button id="shade" aria-label="Cerrar menú" hidden></button>
+    </div>
+    <button id="shade" tabindex="-1" aria-label="Cerrar temario" hidden></button>
     <div class="shell">
       <header class="topbar">
-        <button
-          id="open-nav"
-          class="icon-btn mobile"
-          aria-label="Abrir menú"
-          aria-controls="sidebar"
-          aria-expanded="false"
-          data-icon="menu"
-        ></button>
+        <a class="mobile mobile-brand" href="#inicio"><img src="assets/marca.svg" width="32" height="32" alt="">MBA Training</a>
         <div id="crumb"></div>
+        <div id="mobile-account" role="status" hidden></div>
         <a
           class="quiet pdf-link"
           aria-label="Abrir compendio a color en PDF"
@@ -80,17 +99,23 @@
           ><span class="pdf-full">Compendio PDF</span
           ><span class="pdf-short">PDF</span></a
         >
-        <div id="account-tools" hidden><button id="account-logout" type="button" class="quiet">Salir</button></div>
       </header>
-      <div id="mobile-account" hidden></div>
       <div id="save-warning" role="alert" hidden></div>
       <main id="main" tabindex="-1"></main>
+      <nav class="mobile-tabs" aria-label="Navegación principal">
+        <a href="#inicio" data-tab="home"><span data-icon="grid"></span>Inicio</a>
+        <button type="button" id="open-nav" data-tab="modules" aria-controls="sidebar" aria-expanded="false"><span data-icon="layers"></span>Temario</button>
+        <a href="#respuestas" data-tab="answers"><span data-icon="sheet"></span>Respuestas</a>
+        <a href="#solucionario" data-tab="solutions"><span data-icon="book"></span>Solucionario</a>
+      </nav>
     </div>
-    <dialog id="figure-dialog" aria-label="Gráfico ampliado">
-      <button class="icon-btn close-dialog" aria-label="Cerrar gráfico">
-        ×
-      </button>
-      <div class="zoom-area"><img alt="" /></div>
+    <dialog id="figure-dialog" aria-labelledby="figure-title">
+      <div class="figure-tools">
+        <h2 id="figure-title">Gráfico del apartado</h2>
+        <button class="quiet" id="figure-zoom" type="button" aria-pressed="false">Ampliar</button>
+        <button class="icon-btn close-dialog" type="button" aria-label="Cerrar gráfico" data-icon="close" autofocus></button>
+      </div>
+      <div class="zoom-area" tabindex="0" role="region" aria-label="Vista del gráfico"><img alt="" /></div>
     </dialog>
     <div id="notice" role="status" aria-live="polite"></div>
     <noscript
