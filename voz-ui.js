@@ -5,7 +5,6 @@
     play: '<path d="M8 4.8c0-.8.9-1.3 1.6-.8l10.2 7.2a1 1 0 0 1 0 1.6L9.6 20c-.7.5-1.6 0-1.6-.8z" fill="currentColor"/>',
     pause: '<path d="M8.5 5v14m7-14v14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>',
     stop: '<rect x="5.5" y="5.5" width="13" height="13" rx="2" fill="currentColor"/>',
-    voices: '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7h6m4 0h8M3 17h12m4 0h2"/><circle cx="11" cy="7" r="2"/><circle cx="17" cy="17" r="2"/></g>',
   };
   const icon = (name) =>
     `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24">${symbols[name]}</svg>`;
@@ -17,6 +16,7 @@
     const voiceSettingsId = "voces-lectura-" + ++instanceNumber;
     const player = document.createElement("div");
     player.className = "voice-player";
+    player.tabIndex = -1;
     player.setAttribute("role", "group");
     player.setAttribute("aria-label", "Lectura en voz alta");
     player.innerHTML = `<div class="voice-row">
@@ -30,7 +30,7 @@
           ${rates.map((rate) => `<option value="${rate}"${rate === 1 ? " selected" : ""}>${rateText(rate)}</option>`).join("")}
         </select>
         <button type="button" class="voice-control voice-settings" aria-expanded="false"
-          aria-controls="${voiceSettingsId}" aria-label="Elegir voz" title="Elegir voz" hidden>${icon("voices")}</button>
+          aria-controls="${voiceSettingsId}" aria-label="Elegir voz" title="Elegir voz" hidden>Voz</button>
       </div></div>
       <label class="voice-choice" id="${voiceSettingsId}" hidden>
         <span>Voz de lectura</span><select></select></label>
@@ -64,9 +64,15 @@
       settings.setAttribute("aria-expanded", String(!voiceField.hidden));
       if (!voiceField.hidden) voiceSelect.focus({ preventScroll: true });
     });
+    voiceSelect.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      voiceField.hidden = true;
+      settings.setAttribute("aria-expanded", "false");
+      settings.focus({ preventScroll: true });
+    });
     voiceSelect.addEventListener("change", () => actions.onVoice(voiceSelect.value));
 
-    function update({ status = "idle", rate = 1, voice = "", voices = [], message = "" }) {
+    function update({ status = "idle", rate = 1, voice = "", voices = [], autoLabel = "", message = "" }) {
       currentStatus = status;
       const playing = status === "playing", paused = status === "paused";
       host.classList.toggle("voice-active", playing || paused);
@@ -81,18 +87,25 @@
       rateSelect.hidden = unavailable;
       rateSelect.value = String(rate);
 
-      const canChoose = !unavailable && voices.length > 1;
+      const canChoose = !unavailable && voices.length > 0;
+      const hadVoiceFocus = document.activeElement === settings || document.activeElement === voiceSelect;
       settings.hidden = !canChoose;
       if (!canChoose) {
         voiceField.hidden = true;
         settings.setAttribute("aria-expanded", "false");
+        if (hadVoiceFocus) {
+          const next = player.querySelector("button:not([hidden]):enabled") || player;
+          next.focus({ preventScroll: true });
+        }
       } else {
-        const options = [{ id: "", label: "Automática" }, ...voices];
+        const options = [{ id: "", label: autoLabel || "Automática" }, ...voices];
         if (options.length !== voiceSelect.length || options.some((item, i) =>
           voiceSelect.options[i].value !== item.id || voiceSelect.options[i].text !== item.label)) {
           voiceSelect.replaceChildren(...options.map((item) => new Option(item.label, item.id)));
         }
-        voiceSelect.value = voices.some((item) => item.id === voice) ? voice : "";
+        const selected = options.find((item) => item.id === voice) || options[0];
+        voiceSelect.value = selected.id;
+        settings.title = "Elegir voz · " + selected.label;
       }
       const feedback = message || (unavailable ? "La lectura en voz alta no está disponible en este navegador." :
         status === "error" ? "No se pudo reproducir la lectura. Puedes volver a intentarlo." : "");

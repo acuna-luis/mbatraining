@@ -49,6 +49,32 @@
 }
 .voice-control:hover,
 .voice-control[aria-expanded="true"] { background: #dfe9dd; }
+.voice-control.voice-settings {
+  gap: .4rem;
+  width: auto;
+  min-width: 44px;
+  padding-inline: .6rem;
+  border-color: #c3cec3;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+}
+.voice-settings::after {
+  content: "";
+  width: .4rem;
+  height: .4rem;
+  margin-top: -.2rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.voice-settings[aria-expanded="true"]::after {
+  margin-top: .2rem;
+  transform: rotate(225deg);
+}
+.voice-settings:hover, .voice-settings[aria-expanded="true"] {
+  background: #e3ece1;
+}
 .voice-player .voice-rate {
   width: 5rem;
   padding: .35rem 1.45rem .35rem .45rem;
@@ -108,4 +134,7 @@
   .voice-main { min-width: 6.6rem; padding-inline: .375rem; gap: .25rem; }
   .voice-main svg { width: 18px; }
   .voice-player .voice-rate { width: 4.5rem; }
+}
+@media (max-width: 350px) {
+  .voice-control.voice-settings { gap: .15rem; padding-inline: .125rem; }
 }
