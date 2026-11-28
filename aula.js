@@ -1181,7 +1181,11 @@
       toggle.focus();
     }
     if (e.key === "Tab") {
-      const links = [...$("#sidebar").querySelectorAll("a[href], button, summary")].filter(el => el.getClientRects().length);
+      const links = [...$("#sidebar").querySelectorAll("a[href], button:enabled, summary")].filter(el => {
+        // El resumen de un grupo cerrado sigue admitiendo el foco.
+        const scope = el.matches("details > summary") ? el.parentElement.parentElement : el;
+        return !scope.closest("details:not([open])") && el.getClientRects().length;
+      });
       const target = e.shiftKey ? links.at(-1) : links[0];
       if (document.activeElement === (e.shiftKey ? links[0] : links.at(-1))) {
         e.preventDefault();
