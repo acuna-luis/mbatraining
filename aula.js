@@ -97,6 +97,9 @@
   }
   const prefix = "mba.economia.cv0303.v1.";
   const drafts = new Map();
+  let pendingMarkup;
+  const renderedPending = new WeakMap();
+  const pendingModuleStates = new Map();
   let lastId = "",
     showPending = false,
     includeModels = true,
@@ -183,6 +186,9 @@
     const moduleCount = done(sidebarModule.questions);
     const score = scoreSummary();
     const totalCount = score.evaluadas + score.escritas;
+    $("#pending-nav-counts").textContent = score.errores + (score.errores === 1 ? " incorrecta" : " incorrectas") +
+      " · " + (questions.size - totalCount) + " sin contestar";
+    if ($("#pending-sidebar-details").open) renderPendingList($("#pending-sidebar-list"));
     const fillProgress = (name, count, total) => {
       const el = $("#stat-" + name + "-progress");
       el.textContent = progressPercent.format(count / total);
@@ -220,8 +226,11 @@
   function save(q, d, updateStats = true) {
     const previous = draft(q);
     drafts.set(q.id, d);
-    if (updateStats && (previous.mode !== d.mode || previous.choice !== d.choice ||
-        Boolean(previous.text.trim()) !== Boolean(d.text.trim()))) updateSidebarStats();
+    if (previous.mode !== d.mode || previous.choice !== d.choice ||
+        Boolean(previous.text.trim()) !== Boolean(d.text.trim())) {
+      pendingMarkup = undefined;
+      if (updateStats) updateSidebarStats();
+    }
     if (cloud) { cloud.save(q.id, d); return; }
     try {
       localStorage.setItem(prefix + "r." + q.id, JSON.stringify(d));
@@ -249,7 +258,10 @@
       parts;
   }
   function nav(current = "", mod = 0) {
-    const selectedTab = current || "modules";
+    const pendingLink = $("#pending-nav-link");
+    if (current === "pending") pendingLink.setAttribute("aria-current", "page");
+    else pendingLink.removeAttribute("aria-current");
+    const selectedTab = current === "pending" ? "modules" : current || "modules";
     document.querySelectorAll("[data-tab]").forEach((tab) => {
       if (tab.dataset.tab === selectedTab) {
         tab.setAttribute("aria-current", selectedTab === "modules" ? "location" : "page");
@@ -377,6 +389,7 @@
   }
   const solutionLink = (a) => "#solucionario/" + encodeURIComponent(a.id);
   const practiceLink = (a, number) => link(a) + "/practica/" + number;
+  const questionLink = (a, q) => a.isFinal ? link(a) : practiceLink(a, a.questions.indexOf(q) + 1);
 
   function courseSequence(m, a, solutions = false, questionNumber = 0) {
     const index = m.items.indexOf(a);
@@ -664,13 +677,7 @@
     }
     return result;
   }
-  function reviewOutline(filter = "answered") {
-    const matches = (q) => {
-      if (filter === "all") return true;
-      if (filter === "errors") return choiceGrade(q) === false;
-      if (filter === "written") return draft(q).mode === "texto" && Boolean(response(q));
-      return Boolean(response(q));
-    };
+  function groupedQuestions(matches) {
     const groups = [];
     for (const m of modules) {
       const sections = [];
@@ -679,8 +686,65 @@
         const selected = a.questions.filter(matches);
         if (selected.length) sections.push({ a, selected });
       }
-      if (sections.length) groups.push({ m, sections });
+      if (sections.length) groups.push({ m, sections, total: sections.reduce((n, s) => n + s.selected.length, 0) });
     }
+    return groups;
+  }
+  function pendingGroup(kind, title, groups) {
+    const count = groups.reduce((sum, group) => sum + group.total, 0);
+    const blocks = groups.map(({ m, sections, total }) => {
+      const rows = sections.flatMap(({ a, selected }) => selected.map((q) => {
+        const label = a.isFinal ? "Caso final" : "Apartado " + a.id + " · Pregunta " + (a.questions.indexOf(q) + 1);
+        return `<li><a class="pending-question" href="${questionLink(a, q)}">
+          <small>${esc(label)}</small><span>${esc(q.prompt)}</span></a></li>`;
+      }));
+      return `<details class="pending-module" data-module="${m.number}" data-group-key="${kind}-${m.number}">
+        <summary><span>Módulo ${m.number} · ${esc(m.title)}</span><span class="pending-count">${total}</span></summary>
+        <ul class="pending-questions">${rows.join("")}</ul></details>`;
+    });
+    return `<section class="pending-group" data-count="${count}"><h2>${title} <span class="pending-count">${count}</span></h2>
+      ${blocks.length ? blocks.join("") : '<p class="pending-empty">' +
+        (kind === "errors" ? "No tienes respuestas incorrectas." : "Has contestado todas las preguntas.") + '</p>'}
+      </section>`;
+  }
+  function renderPendingList(container) {
+    if (pendingMarkup === undefined) {
+      const errors = groupedQuestions((q) => choiceGrade(q) === false);
+      const unanswered = groupedQuestions((q) => !response(q));
+      pendingMarkup = pendingGroup("errors", "Incorrectas", errors) +
+        pendingGroup("unanswered", "Sin contestar", unanswered);
+    }
+    if (renderedPending.get(container) === pendingMarkup) return;
+    const focused = container.contains(document.activeElement) ? document.activeElement : null;
+    const focusModule = focused?.closest(".pending-module")?.dataset.groupKey;
+    container.innerHTML = pendingMarkup;
+    renderedPending.set(container, pendingMarkup);
+    for (const group of container.querySelectorAll(".pending-module")) {
+      const showQuestions = container.id === "pending-page-list" && Number(group.parentElement.dataset.count) <= 5;
+      group.open = pendingModuleStates.get(container.id + "/" + group.dataset.groupKey) ?? showQuestions;
+    }
+    if (focused) {
+      const links = [...container.querySelectorAll(".pending-module[open] a")];
+      const target = links.find((a) => a.href === focused.href) ||
+        container.querySelector('[data-group-key="' + focusModule + '"] summary') ||
+        container.querySelector("summary") || (container.id === "pending-sidebar-list" ? $("#pending-nav-link") : main);
+      target.focus({ preventScroll: true });
+    }
+  }
+  function pendingPage() {
+    nav("pending");
+    crumb("Preguntas pendientes");
+    main.innerHTML = `<div class="pending-page"><header class="review-heading">
+      <h1 class="page-title">Preguntas pendientes</h1></header><div id="pending-page-list"></div></div>`;
+    renderPendingList($("#pending-page-list"));
+  }
+  function reviewOutline(filter = "answered") {
+    const groups = groupedQuestions((q) => {
+      if (filter === "all") return true;
+      if (filter === "errors") return choiceGrade(q) === false;
+      if (filter === "written") return draft(q).mode === "texto" && Boolean(response(q));
+      return Boolean(response(q));
+    });
     if (!groups.length) {
       const message = filter === "errors" ? "No tienes respuestas incorrectas." :
         filter === "written" ? "Aún no tienes respuestas escritas." : "Aún no has respondido ninguna pregunta.";
@@ -688,8 +752,7 @@
       return `<div class="review-empty">${icon("sheet")}<p>${message}</p>
         <a class="link" href="${resumeLink(item)}">${lastId ? "Continuar estudio" : "Empezar a estudiar"}</a></div>`;
     }
-    return groups.map(({ m, sections }) => {
-      const total = sections.reduce((n, s) => n + s.selected.length, 0);
+    return groups.map(({ m, sections, total }) => {
       return `<details class="review-module" ${groups.length === 1 ? "open" : ""}>
         <summary><span><small>Módulo ${m.number}</small><strong>${esc(m.title)}</strong></span>
           <span class="review-tally">${total}<span class="sr"> preguntas</span></span></summary>
@@ -699,7 +762,7 @@
             ${selected.map((q) => {
               const answer = response(q), grade = choiceGrade(q);
               const verdict = !answer ? "Pendiente" : grade === null ? "Respuesta escrita" : grade ? "Correcta" : "Incorrecta";
-              const url = a.isFinal ? link(a) : practiceLink(a, a.questions.indexOf(q) + 1);
+              const url = questionLink(a, q);
               return `<article class="review-entry"><span class="review-verdict${grade === false ? " error" : ""}">${verdict}</span>
                 ${caseMarkup(q)}<h4>${esc(q.prompt)}</h4>
                 ${answer ? `<p class="answer-preview">${esc(answer)}</p>` : ""}
@@ -920,7 +983,7 @@
       const section = id ? item : items.get(lastId);
       return section?.a.questions ? { page, ...section } : { page, m: m || modules[0] };
     }
-    return { page: page === "respuestas" ? "respuestas" : "inicio" };
+    return { page: ["respuestas", "pendientes"].includes(page) ? page : "inicio" };
   }
   let renderedPage, renderedRoute;
   function render(navigation = false) {
@@ -931,6 +994,7 @@
     if (changed || !navigation) {
       if (route.page === "modulo") modulePage(route.m, route.a, route.questionNumber);
       else if (route.page === "respuestas") review();
+      else if (route.page === "pendientes") pendingPage();
       else if (route.page === "solucionario") solutionPage(route.m, route.a);
       else home();
       window.voz?.montar(main);
@@ -941,7 +1005,7 @@
       (route.page === "solucionario" ? "Solucionario · " : "") +
       (route.questionNumber ? "Pregunta " + route.questionNumber + " · " : "") +
       (route.a ? itemName(route.a) : route.m?.title ||
-        (route.page === "respuestas" ? "Mis respuestas" : "Fundamentos de Economía")) + " · MBA Training";
+        ({ respuestas: "Mis respuestas", pendientes: "Preguntas pendientes" }[route.page] || "Fundamentos de Economía")) + " · MBA Training";
     if (route.page === "modulo" && route.a?.questions) remember(route.a.id);
     sidebarModule = route.m || sidebarModule || items.get(lastId)?.m || modules[0];
     updateSidebarStats();
@@ -983,7 +1047,12 @@
     updateUnitProgress(fresh.closest("[data-unit]"), q);
   }
   function refreshDraft(q) {
+    pendingMarkup = undefined;
     updateSidebarStats();
+    if (renderedPage === "pendientes") {
+      renderPendingList($("#pending-page-list"));
+      return;
+    }
     const card = main.querySelector('[data-q="' + CSS.escape(q.id) + '"]');
     if (card) redrawCard(card, q);
     else if (renderedPage !== "solucionario") {
@@ -1073,6 +1142,7 @@
     if (cloud) return;
     if (event.key === null) {
       drafts.clear();
+      pendingMarkup = undefined;
       lastId = "";
       sidebarModule = undefined;
       render();
@@ -1125,7 +1195,21 @@
       $("#sidebar .identity a").focus({ preventScroll: true });
     }
   });
-  $("#navigation").addEventListener("click", (e) => {
+  $("#pending-sidebar-details").addEventListener("toggle", (e) => {
+    const list = $("#pending-sidebar-list");
+    if (e.currentTarget.open) renderPendingList(list);
+    else {
+      renderedPending.delete(list);
+      list.replaceChildren();
+    }
+  });
+  document.addEventListener("toggle", (e) => {
+    const group = e.target;
+    if (!group.matches?.(".pending-module") || !group.isConnected) return;
+    const key = group.closest("#pending-sidebar-list, #pending-page-list").id + "/" + group.dataset.groupKey;
+    pendingModuleStates.set(key, group.open);
+  }, true);
+  $("#sidebar").addEventListener("click", (e) => {
     if (e.target.closest("a")) closeNav();
   });
   document.addEventListener("click", (e) => {
@@ -1163,6 +1247,7 @@
       hasQuestion: (id) => questions.has(id),
       load(values, last) {
         drafts.clear();
+        pendingMarkup = undefined;
         sidebarModule = undefined;
         for (const [id, value] of Object.entries(values)) {
           const q = questions.get(id);
@@ -1181,6 +1266,13 @@
         drafts.clear(); lastId = ""; query = ""; showPending = false; includeModels = true;
         renderedRoute = undefined; renderedPage = undefined;
         sidebarModule = undefined;
+        pendingMarkup = undefined;
+        pendingModuleStates.clear();
+        $("#pending-sidebar-details").open = false;
+        renderedPending.delete($("#pending-sidebar-list"));
+        $("#pending-sidebar-list").replaceChildren();
+        $("#pending-nav-counts").textContent = "";
+        $("#pending-nav-link").removeAttribute("aria-current");
         $("#stat-module-meter").value = $("#stat-course-meter").value = 0;
         $("#stat-module-label").textContent = "Módulo actual";
         $("#stat-module-label").removeAttribute("title");

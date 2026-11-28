@@ -296,6 +296,48 @@
 .review-heading .page-title {
   margin-bottom: 8px;
 }
+.pending-page {
+  width: min(100%, 56rem);
+  margin-inline: auto;
+}
+.pending-page .review-heading { margin-bottom: clamp(1.2rem, 3vw, 2rem); }
+.pending-page .page-title { overflow-wrap: anywhere; }
+.pending-page .pending-group {
+  padding: clamp(.9rem, 2.6vw, 1.6rem);
+  border: 1px solid var(--line);
+  border-radius: .8rem;
+  background: #fff;
+}
+.pending-page .pending-group + .pending-group { margin-top: 1rem; }
+.pending-page .pending-group h2 {
+  margin: 0 0 .8rem;
+  color: var(--ink);
+  font: 500 clamp(1.45rem, 2.7vw, 1.9rem)/1.15 var(--serif);
+  letter-spacing: -.035em;
+}
+.pending-page .pending-group h2 .pending-count {
+  min-width: 2rem;
+  padding: .3rem .6rem;
+  border-radius: .5rem;
+  background: var(--tint);
+  text-align: center;
+  letter-spacing: normal;
+}
+.pending-page .pending-module > summary { padding: .65rem .15rem; }
+.pending-page .pending-questions {
+  margin: .2rem 0 .85rem;
+  border-inline-start: 2px solid #c5d6c8;
+}
+.pending-page .pending-question {
+  padding: .65rem clamp(.7rem, 2vw, 1.2rem);
+  line-height: 1.5;
+}
+.pending-page .pending-question:hover { background: var(--paper); }
+.pending-page .pending-questions li + li { border-block-start: 1px solid var(--line); }
+.pending-page .pending-group > p {
+  margin: .3rem 0 0;
+  color: var(--muted);
+}
 .score-panel .score-breakdown {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

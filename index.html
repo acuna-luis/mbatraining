@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#103e35" />
     <title>Fundamentos de Economía · MBA Training</title>
     <link rel="icon" href="assets/marca.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="aula.css?v=5" />
-    <link rel="stylesheet" href="escritorio.css?v=4" />
+    <link rel="stylesheet" href="aula.css?v=6" />
+    <link rel="stylesheet" href="escritorio.css?v=5" />
     <link rel="stylesheet" href="estudio.css?v=4" />
     <link rel="stylesheet" href="escucha.css?v=2" />
     <link rel="stylesheet" href="acceso.css?v=4" />
@@ -24,7 +24,7 @@
     <script defer src="nube.js?v=5"></script>
     <script defer src="voz-ui.js?v=2"></script>
     <script defer src="voz.js?v=3"></script>
-    <script defer src="aula.js?v=7"></script>
+    <script defer src="aula.js?v=8"></script>
   </head>
   <body class="account-locked">
     <div id="auth-screen" class="auth-screen" role="main" aria-labelledby="auth-title">
@@ -99,6 +99,14 @@
         </section>
         <nav id="navigation" aria-label="Curso"></nav>
       </div>
+      <section class="side-pending" aria-labelledby="pending-nav-link">
+        <a id="pending-nav-link" href="#pendientes" aria-describedby="pending-nav-counts">Preguntas pendientes</a>
+        <small id="pending-nav-counts"></small>
+        <details id="pending-sidebar-details">
+          <summary aria-label="Lista de preguntas pendientes en el temario" aria-controls="pending-sidebar-list" title="Mostrar u ocultar las preguntas"></summary>
+          <div id="pending-sidebar-list"></div>
+        </details>
+      </section>
       <div class="side-foot">
         <span class="account-symbol" data-icon="user"></span>
         <div class="account-details">
