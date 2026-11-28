@@ -1,0 +1,17 @@
+Narraciones del aula de Fundamentos de Economía
+
+Síntesis local con Piper y el modelo es_ES-sharvard-medium. Las lecturas usan
+la voz femenina 1. La pista combina la narración del texto, las tablas y las
+descripciones de los gráficos del cuaderno. Los MP3 se sirven desde el aula.
+
+Sharvard_IJA (2014), de Vincent Aubanel, María Luisa García Lecumberri y Martin
+Cooke. LISTA Consortium. https://doi.org/10.7488/ds/75
+Datos de voz bajo CC BY 3.0. https://creativecommons.org/licenses/by/3.0/
+
+Base Hi-Fi TTS, lectora 92 (Cori Samuel), de Evelina Bakhturina, Vitaly
+Lavrukhin, Boris Ginsburg y Yang Zhang. https://www.openslr.org/109/
+Datos de voz bajo CC BY 4.0. https://creativecommons.org/licenses/by/4.0/
+
+Modelo afinado y publicado en rhasspy/piper-voices. Revisión utilizada:
+https://huggingface.co/rhasspy/piper-voices/tree/613b6e5ad36ddca4e70e171957291483dc244d9f/es/es_ES/sharvard/medium
+Motor Piper, Open Home Foundation. https://github.com/OHF-Voice/piper1-gpl

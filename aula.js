@@ -460,7 +460,7 @@
               k +
               '" ' +
               (d.choice === opt ? "checked" : "") +
-              "><span>" +
+              "><span data-voz-texto>" +
               esc(q.type === "final" ? optionLabel(q, k) : opt) +
               "</span></label>",
           )
@@ -487,7 +487,7 @@
       qid +
       '"><span class="eyebrow">' +
       questionLabel(q, num) +
-      '</span>' + caseMarkup(q) + '<' + heading + ' id="' +
+      '</span>' + caseMarkup(q) + '<' + heading + ' data-voz-texto id="' +
       titleId +
       '">' +
       esc(q.prompt) +
@@ -508,11 +508,11 @@
     return q.case ? '<div class="case-text">' + paragraphs(q.case) + '</div>' : "";
   }
   function paragraphs(text) {
-    return text.split(/\n\s*\n/).map((p) => "<p>" + esc(p) + "</p>").join("");
+    return text.split(/\n\s*\n/).map((p) => "<p data-voz-texto>" + esc(p) + "</p>").join("");
   }
   function answerMarkup(q) {
-    if (q.type !== "final") return '<p class="answer-preview">' + esc(reference(q)) + '</p>';
-    return '<p class="answer-preview"><strong>' + esc(optionLabel(q, q.correctIndex)) +
+    if (q.type !== "final") return '<p class="answer-preview" data-voz-texto>' + esc(reference(q)) + '</p>';
+    return '<p class="answer-preview" data-voz-texto><strong>' + esc(optionLabel(q, q.correctIndex)) +
       '</strong></p><div class="case-reason">' + paragraphs(q.explanation) + '</div>';
   }
   function unitCount(a) {
@@ -529,33 +529,35 @@
         return `<a href="${practiceLink(a, i + 1)}" data-step="${esc(item.id)}" class="${answered ? "answered" : ""}"
           aria-label="Pregunta ${i + 1}${answered ? ", respondida" : ""}"${i + 1 === number ? ' aria-current="step"' : ""}>${i + 1}</a>`;
       }).join("")}</nav>
-      ${questionCard(q, number)}</section>`;
+      <div data-voz></div>${questionCard(q, number)}</section>`;
   }
 
   function readingMarkup(a, practiceUrl) {
-    const table = a.table ? `<div class="reading-table"><table><thead><tr>
+    const table = a.table ? `<div class="reading-table" data-voz-texto="${esc(a.table.map(row => row.join(", ")).join(". "))}"><table><thead><tr>
       ${a.table[0].map((cell) => `<th scope="col">${esc(cell)}</th>`).join("")}</tr></thead>
       <tbody>${a.table.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
       </table></div>` : "";
     const figure = a.figure ? `<button class="figure-btn" data-zoom="${esc(a.id)}">
-        <img loading="lazy" src="${esc(a.figure.src)}" alt="${esc(a.figure.alt)}">
+        <img loading="lazy" src="${esc(a.figure.src)}" alt="${esc(a.figure.alt)}" data-voz-texto="${esc(a.figure.alt)}">
         <span>${icon("search")} Ampliar gráfico</span></button>` : "";
-    return `<section class="read-card"><h2 class="study-subtitle">Ideas clave</h2>
-      ${a.ideas.map((idea) => `<p>${esc(idea)}</p>`).join("")}${table}${figure}
+    return `<div data-voz data-voz-audio="assets/audio/lectura/${encodeURIComponent(a.id)}.mp3"></div>
+      <section class="read-card"><h2 class="study-subtitle">Ideas clave</h2>
+      ${a.ideas.map((idea) => `<p data-voz-texto>${esc(idea)}</p>`).join("")}${table}${figure}
       <footer class="reading-sources"><span>Lectura de origen, pp. ${esc(a.source)}</span>
-        <a href="assets/compendio-color.pdf#page=${a.page}" target="_blank" rel="noopener">${icon("book")} Compendio, p. ${a.page}</a></footer></section>
+        <a href="assets/compendio-color.pdf#page=${a.page}" target="_blank" rel="noopener">${icon("book")} Compendio, p. ${a.page}</a>
+        <a href="assets/audio/CREDITOS.txt" target="_blank" rel="noopener">Créditos de voz</a></footer></section>
       <a class="button practice-start" href="${practiceUrl}">${icon("edit")} Practicar este apartado</a>`;
   }
 
   function unitSection(a, questionNumber) {
     const code = a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id);
-    const header = `<p class="eyebrow kicker">${code}</p><h1 class="page-title">${esc(a.title)}</h1>`;
+    const header = `<p class="eyebrow kicker">${code}</p><h1 class="page-title" data-voz-texto>${esc(a.title)}</h1>`;
     let body;
     if (!a.questions) {
-      body = `<p class="note-content">${esc(a.note)}</p>`;
+      body = `<div data-voz></div><p class="note-content" data-voz-texto>${esc(a.note)}</p>`;
     } else if (a.isFinal) {
       body = `<div class="practice-heading"><span class="meta" data-unit-progress aria-live="polite">${unitCount(a)}</span></div>
-        ${questionCard(a.questions[0], 1)}`;
+        <div data-voz></div>${questionCard(a.questions[0], 1)}`;
     } else {
       const firstPending = a.questions.findIndex((q) => !response(q)) + 1;
       const practiceUrl = practiceLink(a, questionNumber || firstPending || 1);
@@ -823,17 +825,18 @@
   function solutionSection(a) {
     const answers = a.questions.map((q, i) => {
       const options = q.type === "final" ? '<ol type="A" class="case-options">' +
-        q.options.map((opt) => "<li>" + esc(opt) + "</li>").join("") + "</ol>" : "";
+        q.options.map((opt) => "<li data-voz-texto>" + esc(opt) + "</li>").join("") + "</ol>" : "";
       return `<details class="solution-entry" data-solution-id="${esc(q.id)}"${i === 0 ? " open" : ""}>
         <summary><span><small class="eyebrow">${q.type === "final" ? "Caso integrador" : questionLabel(q, i + 1)}</small>
-          <strong>${esc(q.prompt)}</strong></span></summary>
+          <strong data-voz-texto>${esc(q.prompt)}</strong></span></summary>
         <div class="solution-answer">${caseMarkup(q)}${options}
-          <h2>${q.type === "desarrollo" ? "Modelo de respuesta" : "Respuesta correcta"}</h2>${answerMarkup(q)}</div>
+          <h2 data-voz-texto>${q.type === "desarrollo" ? "Modelo de respuesta" : "Respuesta correcta"}</h2>${answerMarkup(q)}</div>
         </details>`;
     }).join("");
     return `<section id="solucion-${esc(encodeURIComponent(a.id))}" aria-labelledby="solution-heading">
       <p class="eyebrow kicker">${a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id)}</p>
-      <h1 class="page-title" id="solution-heading">${esc(a.title)}</h1>
+      <h1 class="page-title" id="solution-heading" data-voz-texto>${esc(a.title)}</h1>
+      <div data-voz></div>
       <a class="solution-practice" href="${a.isFinal ? link(a) : practiceLink(a, 1)}">${icon("edit")} Practicar este apartado</a>
       ${answers}</section>`;
   }
@@ -886,6 +889,7 @@
       else if (route.page === "respuestas") review();
       else if (route.page === "solucionario") solutionPage(route.m, route.a);
       else home();
+      window.voz?.montar(main);
       renderedPage = route.page;
       renderedRoute = location.hash;
     }
@@ -919,6 +923,7 @@
     }
   }
   function redrawCard(card, q, focusSel) {
+    window.voz?.detener();
     const { a } = items.get(card.closest("[data-unit]").dataset.unit);
     const wrap = document.createElement("div");
     wrap.innerHTML = questionCard(q, a.questions.indexOf(q) + 1, $(".question-solution", card).open);
@@ -1118,6 +1123,7 @@
         refreshDraft(q);
       },
       clear() {
+        window.voz?.detener();
         drafts.clear(); lastId = ""; query = ""; showPending = false; includeModels = true;
         renderedRoute = undefined; renderedPage = undefined;
         closeNav(); main.replaceChildren();

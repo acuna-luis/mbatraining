@@ -1,0 +1,111 @@
+[data-voz]:has(> .voice-player) {
+  margin-block: .75rem 1rem;
+}
+.voice-player {
+  position: relative;
+  padding: .35rem;
+  border: 1px solid #c8d7cb;
+  border-radius: 12px;
+  background: #f1f5ef;
+  color: var(--ink);
+}
+.voice-row,
+.voice-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+.voice-options { margin-inline-start: auto; }
+.voice-player button,
+.voice-player select {
+  min-height: 44px;
+  border-radius: 7px;
+  font: inherit;
+}
+.voice-main,
+.voice-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.voice-main {
+  gap: .45rem;
+  min-width: 7.5rem;
+  padding: .45rem .85rem;
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: white;
+}
+.voice-main span { font-weight: 650; }
+.voice-player svg { display: block; flex-shrink: 0; }
+.voice-main:not(:disabled):hover { background: #104b3c; }
+.voice-control {
+  width: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--green);
+}
+.voice-control:hover,
+.voice-control[aria-expanded="true"] { background: #dfe9dd; }
+.voice-player .voice-rate {
+  width: 5rem;
+  padding: .35rem 1.45rem .35rem .45rem;
+  border-color: #c3cec3;
+  background-position: right .45rem center;
+  color: var(--ink);
+}
+.voice-choice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem .75rem;
+  padding: .65rem .25rem .25rem;
+  margin: .35rem .25rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--body);
+  font-size: .9rem;
+  font-weight: 600;
+}
+.voice-choice select {
+  flex: 1 1 12rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 1rem;
+  font-weight: 400;
+}
+.voice-status {
+  margin: .4rem .5rem .2rem;
+  color: var(--body);
+  font-size: .9rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.voice-status-hidden,
+.voice-status:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (max-width: 880px) {
+  [data-voz].voice-active {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + .25rem);
+    z-index: 6;
+  }
+  .shell:has(#save-warning:not([hidden])) [data-voz].voice-active {
+    top: calc(var(--voice-header-height, 55px + env(safe-area-inset-top, 0px)) + .25rem);
+  }
+}
+@media (max-width: 460px) {
+  .voice-row, .voice-options { gap: .125rem; }
+  .voice-main { min-width: 6.6rem; padding-inline: .375rem; gap: .25rem; }
+  .voice-main svg { width: 18px; }
+  .voice-player .voice-rate { width: 4.5rem; }
+}

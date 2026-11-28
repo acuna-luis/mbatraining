@@ -8,7 +8,7 @@ release="$(date -u +%Y%m%dT%H%M%S)-$(git rev-parse --short HEAD)-$(python3 -c 'i
 local_stage=$(mktemp -d)
 trap 'rm -rf -- "$local_stage"' EXIT
 mkdir -p "$local_stage/public" "$local_stage/server"
-cp -r index.html aula.css acceso.css escritorio.css estudio.css ./*.js assets data "$local_stage/public/"
+cp -r index.html aula.css acceso.css escritorio.css estudio.css escucha.css ./*.js assets data "$local_stage/public/"
 cp server/{__init__,app,store,cli}.py "$local_stage/server/"
 ln -s public/data "$local_stage/data"
 tar -C "$local_stage" -czf - . | ssh -o BatchMode=yes "$target" "set -eu; mkdir /srv/mbatraining/releases/$release; tar --no-same-owner -xzf - -C /srv/mbatraining/releases/$release; chmod -R a+rX /srv/mbatraining/releases/$release"

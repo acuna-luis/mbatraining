@@ -8,6 +8,8 @@ Cuaderno interactivo de Fundamentos de Economía. Entra en el [aula por HTTPS](h
 4. En **Mis respuestas**, revisa cuántas opciones has acertado. Cada elección correcta vale un punto, hasta 521 en el curso. El porcentaje de acierto se calcula sobre las preguntas que has contestado eligiendo una opción. Si cambias una respuesta, el resultado refleja la opción actual. Las respuestas en texto libre, incluidas las de desarrollo, quedan para revisión.
 5. Descarga **Word (.docx)** para leer o compartir el cuaderno, o **JSON** para evaluar los datos por pregunta. Ambos incluyen el resultado automático. Puedes incluir las respuestas de referencia del solucionario y adjuntar el archivo a la IA que elijas para que valore tus respuestas escritas.
 
+En la pestaña **Lectura**, pulsa **▶ Escuchar** para oír el apartado con la voz femenina en español del curso. Puedes pausar, reanudar y ajustar la velocidad entre 0,75× y 2×. El navegador recuerda tu velocidad. En los ejercicios, las notas y el solucionario, el lector usa las voces en español disponibles en tu dispositivo. [Créditos de la narración](assets/audio/CREDITOS.txt).
+
 Para estudiar sin conexión, abre [index.html](index.html) directamente desde tu carpeta con JavaScript activado. Esta modalidad guarda las respuestas solo en ese navegador. Para trasladarlas al servidor, descarga el JSON desde la versión local, entra en tu cuenta y utiliza **Mis respuestas → Importar**. Se conservan las respuestas que ya tengas en la cuenta.
 
 La [guía de despliegue](deploy/README.md) describe la instalación, las copias y la renovación del certificado. La [guía de la API](server/README.md) explica cómo crear cuentas y probar el aislamiento de los datos.
