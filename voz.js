@@ -84,16 +84,123 @@
     return true;
   }
 
-  function spokenText(element) {
-    if (element.dataset.vozTexto) return element.dataset.vozTexto;
-    if (element.tagName === "IMG") return element.alt;
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-    const fragments = [];
-    while (walker.nextNode()) {
-      const node = walker.currentNode, parent = node.parentElement;
-      if (!parent.closest("button, [data-voz]") && visible(parent)) fragments.push(node.textContent);
+  const mathWords = new Map(Object.entries({
+    "+": "más", "−": "menos", "-": "menos", "±": "más o menos",
+    "×": "por", "⋅": "por", "·": "por", "⁢": "por", "/": "dividido entre", "÷": "dividido entre",
+    "=": "igual a", "≈": "aproximadamente igual a", "≠": "distinto de",
+    "<": "menor que", ">": "mayor que", "≤": "menor o igual que", "≥": "mayor o igual que",
+    "(": "abre paréntesis", ")": "cierra paréntesis", "[": "abre corchete", "]": "cierra corchete",
+    "Δ": "delta", "π": "pi", "ε": "épsilon", "η": "eta", "→": "flecha hacia", "%": "por ciento",
+    "Q": "cu", "P": "pe", "X": "equis", "Y": "i griega",
+    "€": "euros", "€/kg": "euros por kilogramo", "kg": "kilogramos",
+    "VA": "valor actual", "VF": "valor futuro", ",": "coma", "∣": "barra", "|": "barra",
+  }));
+
+  const parentheses = (value) => "abre paréntesis " + value + " cierra paréntesis";
+  const absoluteBar = (node) => node.localName === "mo" && /^[|∣]$/.test(node.textContent);
+  const textAccent = (node) => node.localName === "mover" && node.getAttribute("accent") === "true" &&
+    node.firstElementChild?.localName === "mtext";
+  const accents = { "ˊ": "\u0301", "˜": "\u0303", "¨": "\u0308" };
+  function power(exponent) {
+    if (exponent === "2") return "al cuadrado";
+    if (exponent === "3") return "al cubo";
+    if (/^[∗⋆*]$/.test(exponent)) return "estrella";
+    return "elevado a " + exponent;
+  }
+  function mathSequence(parts) {
+    const words = [];
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (absoluteBar(part)) {
+        const end = parts.findIndex((el, j) => j > i && absoluteBar(el));
+        if (end > i + 1) {
+          words.push("valor absoluto de " + mathSequence(parts.slice(i + 1, end)));
+          i = end;
+          continue;
+        }
+      }
+      if (part.textContent === "%" && parts[i + 1]?.textContent === "Δ") {
+        words.push("variación porcentual de");
+        i++;
+      } else {
+        if (parts[i - 1]?.localName === "mn" && ["mi", "msub"].includes(part.localName) &&
+          part.textContent !== "%") words.push("por");
+        words.push(mathSpeech(part));
+      }
     }
-    return fragments.join(" ");
+    return words.join(" ");
+  }
+  function mathSpeech(node, group = false) {
+    if (!node || node.localName.startsWith("annotation")) return "";
+    const parts = Array.from(node.children);
+    const [base, script, upper] = parts;
+    switch (node.localName) {
+      case "semantics": return mathSpeech(base, group);
+      case "mspace": return "";
+      case "mfrac": {
+        const numerator = mathSpeech(base, true), denominator = mathSpeech(script, true);
+        return group ? "el cociente de " + numerator + " entre " + denominator :
+          numerator + " dividido entre " + denominator;
+      }
+      case "msub": return mathSpeech(base, true) + " subíndice " + mathSpeech(script, true);
+      case "msup": return mathSpeech(base, true) + " " + power(mathSpeech(script, true));
+      case "msubsup": return mathSpeech(base, true) + " subíndice " + mathSpeech(script, true) + " " + power(mathSpeech(upper, true));
+      case "msqrt": return "raíz cuadrada de " + parts.map((part) => mathSpeech(part)).join(" ");
+    }
+    if (!parts.length) {
+      const text = node.textContent.trim();
+      return mathWords.get(text) ?? text;
+    }
+    // KaTeX separa la tilde de la letra en palabras como «disposición» y «daño».
+    if (textAccent(node) || (parts.some(textAccent) && parts.every((el) => el.localName === "mtext" || textAccent(el)))) {
+      return node.textContent.replace(/([a-zA-Zı])([ˊ˜¨])/gu, (_, letter, mark) =>
+        (letter === "ı" ? "i" : letter) + accents[mark]).normalize("NFC");
+    }
+    if (parts.length === 1) return mathSpeech(base, group);
+    // KaTeX puede representar una sigla o unidad con una letra romana por nodo.
+    if (mathWords.has(node.textContent) && parts.every((part) =>
+      part.localName === "mi" && part.getAttribute("mathvariant") === "normal")) {
+      return mathWords.get(node.textContent);
+    }
+    const phrase = mathSequence(parts);
+    if (group && parts.some((part, i) => i > 0 && part.localName === "mo" && /^[+−=]$/.test(part.textContent)) &&
+      !["(", "["].includes(base.textContent)) return parentheses(phrase);
+    return phrase;
+  }
+
+  function spokenFormula(node) {
+    const semantics = node.querySelector(".katex-mathml math semantics");
+    // La rama visual y la anotación TeX son copias de la misma expresión.
+    const phrase = mathSpeech(semantics) || node.dataset.formula;
+    return phrase.replace(/(^|[^\d.,])1\s+euros\b/g, "$1un euro");
+  }
+
+  function spokenContents(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+    if (node.nodeType !== Node.ELEMENT_NODE || node.closest("button, [data-voz]") || !visible(node)) return "";
+    if (node.tagName === "BR") return " ";
+    if (node.matches(".formula[data-formula]")) {
+      return " " + spokenFormula(node) + " ";
+    }
+    return Array.from(node.childNodes, spokenContents).join("");
+  }
+
+  function spokenText(element) {
+    if (element.tagName === "IMG") {
+      let description = element.dataset.vozTexto || element.alt;
+      const chart = element.closest(".figure-btn")?.nextElementSibling;
+      if (chart?.matches(".chart-equations")) {
+        const equations = Array.from(chart.querySelectorAll(".formula[data-formula]"))
+          .sort((a, b) => b.dataset.formula.length - a.dataset.formula.length);
+        for (const equation of equations) description = description.replaceAll(equation.dataset.formula, spokenFormula(equation));
+      }
+      return description;
+    }
+    if (element.matches(".formula[data-formula]")) return spokenContents(element);
+    if (element.dataset.vozTexto && !element.querySelector(".formula[data-formula]")) return element.dataset.vozTexto;
+    const table = element.querySelector(":scope > table");
+    if (table) return Array.from(table.rows, (row) => Array.from(row.cells, spokenContents).join(", ")).join(". ");
+    return spokenContents(element);
   }
 
   function splitText(value) {

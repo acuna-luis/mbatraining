@@ -227,11 +227,32 @@
 .solution-entry summary::-webkit-details-marker { display: none; }
 .solution-entry summary::after { transform: rotate(45deg); margin-right: .3rem; }
 .solution-entry[open] summary::after { transform: rotate(225deg); }
-.solution-entry summary span { display: grid; gap: .3rem; }
+.solution-entry summary > span { display: grid; gap: .3rem; min-width: 0; }
 .solution-entry summary strong { line-height: 1.45; font-weight: 600; }
 .solution-answer { margin: 0 1.2rem 1.25rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 .solution-answer h2 { font-size: .96rem; margin: 0 0 .5rem; color: var(--green); }
 .solution-answer .answer-preview { margin-bottom: 0; }
+.math-run {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: middle;
+  padding: .12em .04em;
+  line-height: normal;
+  text-indent: 0;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+.formula .katex { font-size: 1.08em; }
+.chart-equations > summary {
+  width: fit-content;
+  padding-block: .65rem;
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 600;
+}
+.chart-equations ul { display: grid; gap: .45rem; padding-inline-start: 1.3rem; }
+.answer-choice > span, .pending-question > span { min-width: 0; }
 @media (max-width: 580px) {
   .study-heading .page-title, .current-unit .page-title, .solution-reader .page-title { font-size: 2.05rem; line-height: 1.1; }
   .study-reader .progress-card { margin: .8rem 0 1.25rem; }

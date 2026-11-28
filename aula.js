@@ -15,6 +15,56 @@
           "'": "&#39;",
         })[ch],
     );
+  const formulas = new Map(window.FORMULAS);
+  const alternatives = [...formulas.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map(source => source.replace(/[.*+?^$\{\}()|[\]\\]/g, "\\$&"));
+  const formulaPattern = alternatives.length && new RegExp(
+    "(^|[^\\p{L}\\p{M}\\p{N}_])(" + alternatives.join("|") + ")(?![\\p{L}\\p{M}\\p{N}_])", "gu"
+  );
+  const renderedFormulas = new Map();
+  function* formulaMatches(text) {
+    if (!formulaPattern) return;
+    for (const match of text.matchAll(formulaPattern)) {
+      const source = match[2], start = match.index + match[1].length, end = start + source.length;
+      // Una coincidencia parcial dentro de un decimal o un millar cambiaría el valor mostrado.
+      if ((/^\d/.test(source) && /\d[.,]$/.test(text.slice(Math.max(0, start - 2), start))) ||
+          (/\d$/.test(source) && /^[.,]\d/.test(text.slice(end, end + 2)))) continue;
+      yield { source, start, end };
+    }
+  }
+  function formulaHtml(source) {
+    if (!renderedFormulas.has(source)) {
+      try {
+        const tex = formulas.get(source);
+        const equation = window.katex.renderToString(tex.includes("\\frac") ? "\\displaystyle " + tex : tex, {
+          output: "htmlAndMathml", trust: false, strict: "ignore",
+        });
+        renderedFormulas.set(source, '<span class="formula" data-formula="' + esc(source) + '">' + equation + '</span>');
+      } catch {
+        renderedFormulas.set(source, esc(source));
+      }
+    }
+    return renderedFormulas.get(source);
+  }
+  function mathText(text, includeVariables = true) {
+    text = String(text ?? "");
+    if (!window.katex) return esc(text);
+    let html = "", cursor = 0;
+    for (const { source, start, end } of formulaMatches(text)) {
+      if (!includeVariables && /^\p{L}+$/u.test(source)) continue;
+      html += esc(text.slice(cursor, start)) + '<span class="math-run">' + formulaHtml(source);
+      cursor = end;
+      // La puntuación permanece en la última línea de las fórmulas que se parten en móvil.
+      const punctuation = text.slice(end).match(/^[.,;:!?…)\]]+/);
+      if (punctuation) {
+        html += esc(punctuation[0]);
+        cursor += punctuation[0].length;
+      }
+      html += "</span>";
+    }
+    return html + esc(text.slice(cursor));
+  }
   const fold = (s) =>
     s
       .normalize("NFD")
@@ -324,7 +374,7 @@
     }
     function resultLink(url, context, title, symbol) {
       return `<a class="catalog-result" href="${url}"><span class="result-icon">${icon(symbol)}</span>
-        <div><span class="meta">${esc(context)}</span><strong>${esc(title)}</strong></div></a>`;
+        <div><span class="meta">${esc(context)}</span><strong>${mathText(title)}</strong></div></a>`;
     }
     for (const m of modules) {
       if (match("Módulo " + m.number + " " + m.title))
@@ -449,7 +499,7 @@
       const count = done(item.questions);
       return `<li><a class="syllabus-row" href="${link(item)}">
         <span class="syllabus-code${count === item.questions.length ? " complete" : ""}">${item.isFinal ? icon("target") : esc(item.id)}</span>
-        <span class="syllabus-copy"><strong>${esc(item.isFinal ? "Pregunta final" : item.title)}</strong>
+        <span class="syllabus-copy"><strong>${mathText(item.isFinal ? "Pregunta final" : item.title)}</strong>
         <small>${count ? unitCount(item) : item.isFinal ? "Caso integrador" : item.questions.length + " preguntas"}</small></span>
         <span class="syllabus-marker" aria-hidden="true"></span></a></li>`;
     }).join("");
@@ -517,7 +567,7 @@
               '" ' +
               (d.choice === opt ? 'checked aria-describedby="resultado-' + qid + '"' : "") +
               "><span data-voz-texto>" +
-              esc(q.type === "final" ? optionLabel(q, k) : opt) +
+              mathText(q.type === "final" ? optionLabel(q, k) : opt) +
               "</span></label>",
           )
           .join("") +
@@ -546,7 +596,7 @@
       '</span>' + caseMarkup(q) + '<' + heading + ' data-voz-texto id="' +
       titleId +
       '">' +
-      esc(q.prompt) +
+      mathText(q.prompt) +
       "</" + heading + ">" +
       field +
       solution +
@@ -564,11 +614,11 @@
     return q.case ? '<div class="case-text">' + paragraphs(q.case) + '</div>' : "";
   }
   function paragraphs(text) {
-    return text.split(/\n\s*\n/).map((p) => "<p data-voz-texto>" + esc(p) + "</p>").join("");
+    return text.split(/\n\s*\n/).map((p) => "<p data-voz-texto>" + mathText(p) + "</p>").join("");
   }
   function answerMarkup(q) {
-    if (q.type !== "final") return '<p class="answer-preview" data-voz-texto>' + esc(reference(q)) + '</p>';
-    return '<p class="answer-preview" data-voz-texto><strong>' + esc(optionLabel(q, q.correctIndex)) +
+    if (q.type !== "final") return '<p class="answer-preview" data-voz-texto>' + mathText(reference(q)) + '</p>';
+    return '<p class="answer-preview" data-voz-texto><strong>' + mathText(optionLabel(q, q.correctIndex)) +
       '</strong></p><div class="case-reason">' + paragraphs(q.explanation) + '</div>';
   }
   function unitCount(a) {
@@ -590,15 +640,19 @@
 
   function readingMarkup(a, practiceUrl) {
     const table = a.table ? `<div class="reading-table" data-voz-texto="${esc(a.table.map(row => row.join(", ")).join(". "))}"><table><thead><tr>
-      ${a.table[0].map((cell) => `<th scope="col">${esc(cell)}</th>`).join("")}</tr></thead>
-      <tbody>${a.table.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
+      ${a.table[0].map((cell) => `<th scope="col">${mathText(cell)}</th>`).join("")}</tr></thead>
+      <tbody>${a.table.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${mathText(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
       </table></div>` : "";
+    const chartEquations = a.figure ? [...new Set(Array.from(formulaMatches(a.figure.alt), (match) => match.source)
+      .filter(source => /[=≈<>≤≥×÷/]| [−+] /.test(source)))] : [];
     const figure = a.figure ? `<button class="figure-btn" data-zoom="${esc(a.id)}">
         <img loading="lazy" src="${esc(a.figure.src)}" alt="${esc(a.figure.alt)}" data-voz-texto="${esc(a.figure.alt)}">
-        <span>${icon("search")} Ampliar gráfico</span></button>` : "";
+        <span>${icon("search")} Ampliar gráfico</span></button>
+        ${chartEquations.length ? `<details class="chart-equations"><summary>Fórmulas del gráfico</summary>
+          <ul>${chartEquations.map(source => "<li>" + mathText(source) + "</li>").join("")}</ul></details>` : ""}` : "";
     return `<div data-voz data-voz-audio="assets/audio/lectura/${encodeURIComponent(a.id)}.mp3"></div>
       <section class="read-card"><h2 class="study-subtitle">Ideas clave</h2>
-      ${a.ideas.map((idea) => `<p data-voz-texto>${esc(idea)}</p>`).join("")}${table}${figure}
+      ${a.ideas.map((idea) => `<p data-voz-texto>${mathText(idea)}</p>`).join("")}${table}${figure}
       <footer class="reading-sources"><span>Lectura de origen, pp. ${esc(a.source)}</span>
         <a href="assets/compendio-color.pdf#page=${a.page}" target="_blank" rel="noopener">${icon("book")} Compendio, p. ${a.page}</a>
         <a href="assets/audio/CREDITOS.txt" target="_blank" rel="noopener">Créditos de voz</a></footer></section>
@@ -607,10 +661,10 @@
 
   function unitSection(a, questionNumber) {
     const code = a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id);
-    const header = `<p class="eyebrow kicker">${code}</p><h1 class="page-title" data-voz-texto>${esc(a.title)}</h1>`;
+    const header = `<p class="eyebrow kicker">${code}</p><h1 class="page-title" data-voz-texto>${mathText(a.title)}</h1>`;
     let body;
     if (!a.questions) {
-      body = `<div data-voz></div><p class="note-content" data-voz-texto>${esc(a.note)}</p>`;
+      body = `<div data-voz></div><p class="note-content" data-voz-texto>${mathText(a.note)}</p>`;
     } else if (a.isFinal) {
       body = `<div class="practice-heading"><span class="meta" data-unit-progress aria-live="polite">${unitCount(a)}</span></div>
         <div data-voz></div>${questionCard(a.questions[0], 1)}`;
@@ -696,7 +750,7 @@
       const rows = sections.flatMap(({ a, selected }) => selected.map((q) => {
         const label = a.isFinal ? "Caso final" : "Apartado " + a.id + " · Pregunta " + (a.questions.indexOf(q) + 1);
         return `<li><a class="pending-question" href="${questionLink(a, q)}">
-          <small>${esc(label)}</small><span>${esc(q.prompt)}</span></a></li>`;
+          <small>${esc(label)}</small><span>${mathText(q.prompt)}</span></a></li>`;
       }));
       return `<details class="pending-module" data-module="${m.number}" data-group-key="${kind}-${m.number}">
         <summary><span>Módulo ${m.number} · ${esc(m.title)}</span><span class="pending-count">${total}</span></summary>
@@ -758,14 +812,14 @@
           <span class="review-tally">${total}<span class="sr"> preguntas</span></span></summary>
         <div class="review-units">${sections.map(({ a, selected }) =>
           `<details class="review-unit" ${sections.length === 1 ? "open" : ""}>
-            <summary>${esc(itemName(a))}</summary><div class="review-unit-body">
+            <summary>${mathText(itemName(a))}</summary><div class="review-unit-body">
             ${selected.map((q) => {
               const answer = response(q), grade = choiceGrade(q);
               const verdict = !answer ? "Pendiente" : grade === null ? "Respuesta escrita" : grade ? "Correcta" : "Incorrecta";
               const url = questionLink(a, q);
               return `<article class="review-entry"><span class="review-verdict${grade === false ? " error" : ""}">${verdict}</span>
-                ${caseMarkup(q)}<h4>${esc(q.prompt)}</h4>
-                ${answer ? `<p class="answer-preview">${esc(answer)}</p>` : ""}
+                ${caseMarkup(q)}<h4>${mathText(q.prompt)}</h4>
+                ${answer ? `<p class="answer-preview">${mathText(answer, grade !== null)}</p>` : ""}
                 <a class="link review-edit" href="${url}">${icon("edit")} ${answer ? "Revisar respuesta" : "Responder"}</a></article>`;
             }).join("")}
             </div></details>`
@@ -932,17 +986,17 @@
   function solutionSection(a) {
     const answers = a.questions.map((q, i) => {
       const options = q.type === "final" ? '<ol type="A" class="case-options">' +
-        q.options.map((opt) => "<li data-voz-texto>" + esc(opt) + "</li>").join("") + "</ol>" : "";
+        q.options.map((opt) => "<li data-voz-texto>" + mathText(opt) + "</li>").join("") + "</ol>" : "";
       return `<details class="solution-entry" data-solution-id="${esc(q.id)}"${i === 0 ? " open" : ""}>
         <summary><span><small class="eyebrow">${q.type === "final" ? "Caso integrador" : questionLabel(q, i + 1)}</small>
-          <strong data-voz-texto>${esc(q.prompt)}</strong></span></summary>
+          <strong data-voz-texto>${mathText(q.prompt)}</strong></span></summary>
         <div class="solution-answer">${caseMarkup(q)}${options}
           <h2 data-voz-texto>${q.type === "desarrollo" ? "Modelo de respuesta" : "Respuesta correcta"}</h2>${answerMarkup(q)}</div>
         </details>`;
     }).join("");
     return `<section id="solucion-${esc(encodeURIComponent(a.id))}" aria-labelledby="solution-heading">
       <p class="eyebrow kicker">${a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id)}</p>
-      <h1 class="page-title" id="solution-heading" data-voz-texto>${esc(a.title)}</h1>
+      <h1 class="page-title" id="solution-heading" data-voz-texto>${mathText(a.title)}</h1>
       <div data-voz></div>
       <a class="solution-practice" href="${a.isFinal ? link(a) : practiceLink(a, 1)}">${icon("edit")} Practicar este apartado</a>
       ${answers}</section>`;
