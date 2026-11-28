@@ -81,12 +81,17 @@ class CourseApiTests(unittest.TestCase):
 
     def test_module_finals_use_the_same_account_and_scoreable_choices(self):
         finals = [q for q in app.QUESTIONS.values() if q["type"] == "final"]
-        self.assertCountEqual([q["module"] for q in finals], range(1, 12))
+        self.assertCountEqual(
+            [(q["id"], q["module"], q.get("qualitative", False)) for q in finals],
+            [(f"final-{n}", n, False) for n in range(1, 12)]
+            + [(f"final-cualitativo-{n}", n, True) for n in range(1, 12)],
+        )
         cookie = self.login("estudiante")
         self.assertEqual(self.req("PUT", self.url, self.payload, cookie)[0], 200)
         for q in finals:
-            with self.subTest(module=q["module"]):
+            with self.subTest(question=q["id"]):
                 self.assertEqual(len(set(q["options"])), 4)
+                self.assertIn(q["correctIndex"], range(4))
                 correct = q["options"][q["correctIndex"]]
                 payload = dict(mode="eleccion", text="", choice=correct, revision=0)
                 url = "/api/drafts/" + q["id"]

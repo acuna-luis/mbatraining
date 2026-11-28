@@ -120,11 +120,11 @@
   const modLink = (n) => "#modulo/" + n;
   const items = new Map(),
     questions = new Map();
-  const moduleFinals = new Map(window.FINALES.map((q) => [q.module, q]));
+  const finals = [...window.FINALES, ...window.FINALES_CUALITATIVOS];
   for (const m of modules) {
-    const final = moduleFinals.get(m.number);
-    m.items.push({ id: final.id, title: "Pregunta final del módulo " + m.number,
-      questions: [final], isFinal: true });
+    for (const q of finals.filter((q) => q.module === m.number)) {
+      m.items.push({ id: q.id, title: q.title || caseType(q), questions: [q], isFinal: true });
+    }
     m.questions = [];
     for (const a of m.items) {
       items.set(a.id, { a, m });
@@ -381,7 +381,7 @@
         matches.push(resultLink(modLink(m.number), "Módulo " + m.number, m.title, "layers"));
       for (const a of m.items) {
         const name = itemName(a);
-        if (match("Apartado " + a.id + " " + a.title))
+        if (match("Apartado " + a.id + " " + name))
           matches.push(resultLink(link(a), "Módulo " + m.number + " · " + m.title, name, "book"));
       }
     }
@@ -408,7 +408,7 @@
           <p class="cover-stats">${modules.length} módulos <span aria-hidden="true">·</span> ${sectionCount} apartados</p>
           <div class="cover-action"><a class="button" href="${resumeLink(last?.a || first)}">${icon("book")}
             ${last ? "Continuar estudio" : "Empezar a estudiar"}</a>
-            ${last ? `<span>Módulo ${last.m.number} · ${last.a.isFinal ? "Caso final" : "Apartado " + esc(last.a.id)}</span>` : ""}
+            ${last ? `<span>Módulo ${last.m.number} · ${last.a.isFinal ? caseType(last.a.questions[0]) : "Apartado " + esc(last.a.id)}</span>` : ""}
           </div></div>
         <a class="cover-figure" href="#apartado/4.7" aria-label="Estudiar el equilibrio de mercado en el apartado 4.7">
           <img src="assets/mercado.svg" alt="Curvas de oferta y demanda en equilibrio" width="350" height="198">
@@ -435,6 +435,7 @@
     results();
   }
   function itemName(a) {
+    if (a.isFinal && a.questions[0].title) return caseType(a.questions[0]) + " · " + a.title;
     return /^\d/.test(a.id) ? a.id + ". " + a.title : a.title;
   }
   const solutionLink = (a) => "#solucionario/" + encodeURIComponent(a.id);
@@ -452,14 +453,14 @@
     let back, forward;
     if (questionNumber > 1) back = [practiceLink(a, questionNumber - 1), "Pregunta anterior"];
     else if (questionNumber) back = [link(a), "Volver a la lectura"];
-    else if (previous) back = [getLink(previous), "Apartado anterior"];
+    else if (previous) back = [getLink(previous), previous.isFinal ? caseType(previous.questions[0]) : "Apartado anterior"];
     else if (!solutions) back = [modLink(m.number), "Índice del módulo"];
     else if (previousModule) {
       const last = previousModule.items.filter((item) => item.questions).at(-1);
       back = [solutionLink(last), "Módulo anterior"];
     }
     if (questionNumber && questionNumber < a.questions.length) forward = [practiceLink(a, questionNumber + 1), "Siguiente pregunta"];
-    else if (next) forward = [getLink(next), "Siguiente apartado"];
+    else if (next) forward = [getLink(next), next.isFinal ? caseType(next.questions[0]) : "Siguiente apartado"];
     else if (nextModule) forward = [solutions ? "#solucionario/" + nextModule.number : modLink(nextModule.number), "Siguiente módulo"];
     else forward = ["#respuestas", "Mis respuestas"];
     return `<nav class="study-pager" aria-label="Continuar el estudio">
@@ -497,16 +498,18 @@
     const start = last || study.find((item) => done(item.questions) < item.questions.length) || study[0];
     const rows = study.map((item) => {
       const count = done(item.questions);
+      const detail = item.isFinal ? [item.questions[0].title, unitCount(item)].filter(Boolean).join(" · ")
+        : count ? unitCount(item) : item.questions.length + " preguntas";
       return `<li><a class="syllabus-row" href="${link(item)}">
         <span class="syllabus-code${count === item.questions.length ? " complete" : ""}">${item.isFinal ? icon("target") : esc(item.id)}</span>
-        <span class="syllabus-copy"><strong>${mathText(item.isFinal ? "Pregunta final" : item.title)}</strong>
-        <small>${count ? unitCount(item) : item.isFinal ? "Caso integrador" : item.questions.length + " preguntas"}</small></span>
+        <span class="syllabus-copy"><strong>${mathText(item.isFinal ? caseType(item.questions[0]) : item.title)}</strong>
+        <small>${esc(detail)}</small></span>
         <span class="syllabus-marker" aria-hidden="true"></span></a></li>`;
     }).join("");
     main.innerHTML = `<div class="study-reader"><header class="study-heading">
       <p class="eyebrow kicker">Módulo ${m.number} de ${modules.length}</p>
       <h1 class="page-title">${esc(m.title)}</h1>
-      <p class="study-meta">${study.length - 1} apartados · ${m.questions.length} preguntas</p>
+      <p class="study-meta">${study.filter((item) => !item.isFinal).length} apartados · ${m.questions.length} preguntas</p>
       <a class="button" href="${link(start)}">${icon("book")}${last || done(m.questions) ? "Continuar módulo" : "Empezar módulo"}</a>
       </header>${progressCard(m.questions)}
       <section aria-labelledby="syllabus-title"><h2 class="study-subtitle" id="syllabus-title">Índice del módulo</h2>
@@ -606,8 +609,11 @@
   function optionLabel(q, k) {
     return String.fromCharCode(65 + k) + ". " + q.options[k];
   }
+  function caseType(q) {
+    return q.qualitative ? "Caso cualitativo" : "Caso cuantitativo";
+  }
   function questionLabel(q, num) {
-    if (q.type === "final") return "Caso integrador · Elige una opción";
+    if (q.type === "final") return caseType(q) + " · Elige una opción";
     return q.type === "desarrollo" ? "Pregunta de desarrollo" : "Comprensión · " + num + " de 5";
   }
   function caseMarkup(q) {
@@ -660,7 +666,7 @@
   }
 
   function unitSection(a, questionNumber) {
-    const code = a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id);
+    const code = a.isFinal ? "Cierre del módulo " + a.questions[0].module : "Apartado " + esc(a.id);
     const header = `<p class="eyebrow kicker">${code}</p><h1 class="page-title" data-voz-texto>${mathText(a.title)}</h1>`;
     let body;
     if (!a.questions) {
@@ -700,7 +706,7 @@
         if (!selected.length) continue;
         apartados.push({
           numero: a.id,
-          titulo: a.title,
+          titulo: a.isFinal ? itemName(a) : a.title,
           pagina_compendio: a.page,
           paginas_origen: a.source,
           preguntas: selected.map((q) => {
@@ -748,7 +754,7 @@
     const count = groups.reduce((sum, group) => sum + group.total, 0);
     const blocks = groups.map(({ m, sections, total }) => {
       const rows = sections.flatMap(({ a, selected }) => selected.map((q) => {
-        const label = a.isFinal ? "Caso final" : "Apartado " + a.id + " · Pregunta " + (a.questions.indexOf(q) + 1);
+        const label = a.isFinal ? caseType(q) : "Apartado " + a.id + " · Pregunta " + (a.questions.indexOf(q) + 1);
         return `<li><a class="pending-question" href="${questionLink(a, q)}">
           <small>${esc(label)}</small><span>${mathText(q.prompt)}</span></a></li>`;
       }));
@@ -988,14 +994,14 @@
       const options = q.type === "final" ? '<ol type="A" class="case-options">' +
         q.options.map((opt) => "<li data-voz-texto>" + mathText(opt) + "</li>").join("") + "</ol>" : "";
       return `<details class="solution-entry" data-solution-id="${esc(q.id)}"${i === 0 ? " open" : ""}>
-        <summary><span><small class="eyebrow">${q.type === "final" ? "Caso integrador" : questionLabel(q, i + 1)}</small>
+        <summary><span><small class="eyebrow">${q.type === "final" ? caseType(q) : questionLabel(q, i + 1)}</small>
           <strong data-voz-texto>${mathText(q.prompt)}</strong></span></summary>
         <div class="solution-answer">${caseMarkup(q)}${options}
           <h2 data-voz-texto>${q.type === "desarrollo" ? "Modelo de respuesta" : "Respuesta correcta"}</h2>${answerMarkup(q)}</div>
         </details>`;
     }).join("");
     return `<section id="solucion-${esc(encodeURIComponent(a.id))}" aria-labelledby="solution-heading">
-      <p class="eyebrow kicker">${a.isFinal ? "Caso integrador" : "Apartado " + esc(a.id)}</p>
+      <p class="eyebrow kicker">${a.isFinal ? "Cierre del módulo " + a.questions[0].module : "Apartado " + esc(a.id)}</p>
       <h1 class="page-title" id="solution-heading" data-voz-texto>${mathText(a.title)}</h1>
       <div data-voz></div>
       <a class="solution-practice" href="${a.isFinal ? link(a) : practiceLink(a, 1)}">${icon("edit")} Practicar este apartado</a>

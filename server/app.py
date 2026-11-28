@@ -38,9 +38,10 @@ def load_catalog():
             if item.get("questions"):
                 units.add(item["id"])
                 questions.update({q["id"]: q for q in item["questions"]})
-    for final in read_catalog_file("finales.js"):
-        units.add(final["id"])
-        questions[final["id"]] = final
+    for catalog in ("finales.js", "finales-cualitativos.js"):
+        for final in read_catalog_file(catalog):
+            units.add(final["id"])
+            questions[final["id"]] = final
     return units, questions
 
 
