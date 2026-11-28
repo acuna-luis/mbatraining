@@ -412,7 +412,7 @@
         ${m.number < modules.length ? `<a class="button" href="${modLink(m.number + 1)}">Siguiente módulo</a>` : '<a class="button" href="#respuestas">Mis respuestas</a>'}
       </nav></div>`;
   }
-  function questionCard(q, num, solutionOpen = false) {
+  function questionCard(q, num, keepSolutionOpen = false) {
     const d = draft(q),
       isLong = q.type === "desarrollo";
     const qid = esc(q.id),
@@ -459,7 +459,7 @@
               '" value="' +
               k +
               '" ' +
-              (d.choice === opt ? "checked" : "") +
+              (d.choice === opt ? 'checked aria-describedby="resultado-' + qid + '"' : "") +
               "><span data-voz-texto>" +
               esc(q.type === "final" ? optionLabel(q, k) : opt) +
               "</span></label>",
@@ -473,15 +473,15 @@
     const label = isLong ? "modelo de respuesta" : "respuesta correcta";
     const grade = choiceGrade(q);
     const verdict = grade !== null
-      ? '<strong class="choice-verdict">' +
+      ? '<strong class="choice-verdict" data-voz-texto>' +
         (grade ? "Tu opción es correcta." : "Tu opción es incorrecta.") +
         '</strong>'
       : "";
     const solution =
-      '<details class="question-solution"' + (solutionOpen ? " open" : "") + '>' +
+      '<details class="question-solution"' + (grade !== null || keepSolutionOpen ? " open" : "") + '>' +
       '<summary><span class="when-closed">Ver ' + label + '</span>' +
       '<span class="when-open">Ocultar ' + label + '</span></summary>' +
-      '<div class="solution-content">' + verdict + answerMarkup(q) + '</div></details>';
+      '<div class="solution-content" id="resultado-' + qid + '">' + verdict + answerMarkup(q) + '</div></details>';
     return (
       '<article class="q-card" data-q="' +
       qid +
@@ -926,7 +926,10 @@
     window.voz?.detener();
     const { a } = items.get(card.closest("[data-unit]").dataset.unit);
     const wrap = document.createElement("div");
-    wrap.innerHTML = questionCard(q, a.questions.indexOf(q) + 1, $(".question-solution", card).open);
+    // Una solución consultada manualmente sigue abierta. Al borrar una elección,
+    // se cierra la corrección que apareció automáticamente al responder.
+    const manuallyOpen = $(".question-solution", card).open && !$(".choice-verdict", card);
+    wrap.innerHTML = questionCard(q, a.questions.indexOf(q) + 1, manuallyOpen);
     const fresh = wrap.firstElementChild;
     card.replaceWith(fresh);
     if (focusSel) $(focusSel, fresh)?.focus({ preventScroll: true });
