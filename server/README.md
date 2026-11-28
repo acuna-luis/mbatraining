@@ -15,6 +15,10 @@ Para la cuenta inicial, la CLI pide la contraseña provisional y un token aleato
 
 Las sesiones expiran a los 14 días y se revocan al cerrar sesión. La API devuelve un error de conflicto (409) cuando un dispositivo intenta cambiar una revisión que ya editó otro dispositivo. El conflicto incorpora la versión actual para que el cliente pueda elegir qué conservar. Se aceptan reintentos de la misma escritura sin duplicar la revisión.
 
+`GET /api/state` incluye `activeSeconds`, los segundos de estudio registrados en la cuenta. Las cuentas anteriores empiezan en cero. El despliegue añade la tabla de actividad al ejecutar `python3 -m server.cli init`.
+
+Cada registro de medición usa su propio UUID. El cliente envía `PUT /api/activity` con la cabecera `X-MBA-User`, la cookie de sesión y un objeto como `{"activityId":"7a970454-21bd-40ce-a54f-fa7e5be47102","seconds":25}`. El valor es el total observado para ese UUID, un entero entre 0 y 2147483647. La API conserva el máximo recibido y devuelve los segundos confirmados en `recordSeconds` y el total de la cuenta en `activeSeconds`. Al reintentar hay que reutilizar el mismo UUID. Enviar cero permite consultar la cantidad ya confirmada.
+
 Para comprobar el aislamiento por cuenta, la activación, la revocación, los límites de acceso, los conflictos y la persistencia en una base temporal:
 
 ```sh

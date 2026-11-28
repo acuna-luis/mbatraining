@@ -92,6 +92,7 @@ svg.icon {
   display: flex;
   align-items: center;
   padding: 0 23px;
+  flex: none;
 }
 .identity a {
   display: flex;
@@ -103,13 +104,122 @@ svg.icon {
   font: 600 1.28rem/1.1 var(--serif);
   letter-spacing: -0.04em;
 }
-#navigation {
+.sidebar-content {
+  flex: 1 1 auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   min-height: 0;
-  padding: 10px 13px 22px;
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
+}
+.side-stats {
+  margin: .5rem .8rem .3rem;
+  padding: .75rem .75rem .2rem;
+  border: 1px solid #d5e1d4;
+  border-radius: .7rem;
+  background: #f2f6ef;
+  font-size: .875rem;
+  line-height: 1.35;
+}
+.side-stats h2 {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0 0 .45rem;
+  color: var(--ink);
+  font: 500 1.2rem/1.2 var(--serif);
+  letter-spacing: -.02em;
+}
+.side-stats h2 .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--green);
+}
+.side-stats dl { margin: 0; }
+.side-stats dl > div, .time-estimate summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) fit-content(52%);
+  align-items: baseline;
+  gap: .45rem;
+}
+.side-stats dl > div { padding: .16rem 0; }
+.side-stats dl .stat-with-meter { row-gap: .2rem; padding-bottom: .45rem; }
+.stat-meter { grid-column: 1 / -1; }
+.stat-meter progress {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 4px;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #d8e4d7;
+}
+.stat-meter progress::-webkit-progress-bar { background: #d8e4d7; }
+.stat-meter progress::-webkit-progress-value { background: #4c795c; }
+.stat-meter progress::-moz-progress-bar { background: #4c795c; }
+.side-stats dt, .time-estimate summary > span:first-child {
+  color: var(--body);
+  overflow-wrap: anywhere;
+}
+.side-stats dd, .time-estimate strong {
+  margin: 0;
+  color: var(--ink);
+  text-align: end;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.side-stats dl .study-time {
+  margin-top: .4rem;
+  padding-top: .5rem;
+  border-top: 1px solid #d4dfd3;
+}
+.time-estimate summary {
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: .25rem;
+}
+.time-estimate summary::-webkit-details-marker { display: none; }
+.time-estimate summary > span:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .38rem;
+}
+.time-estimate summary > span:first-child::after {
+  content: "";
+  display: inline-block;
+  width: .37rem;
+  height: .37rem;
+  flex: none;
+  margin: 0 .1rem .2rem 0;
+  border: solid var(--green);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.time-estimate[open] summary > span:first-child::after {
+  transform: rotate(225deg);
+  margin-bottom: -.02rem;
+}
+.time-estimate p {
+  margin: 0 0 .6rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+#navigation { padding: 10px 13px 22px; }
+@media (min-height: 42rem) {
+  .sidebar-content { display: flex; flex-direction: column; }
+  .side-stats { flex: none; }
+  #navigation {
+    overflow-y: auto;
+    min-height: 8rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
 }
 .nav-main,
 .nav-mod {
@@ -155,6 +265,10 @@ svg.icon {
   padding: 9px 11px;
   font-size: 0.89rem;
 }
+.nav-mod > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .nav-mod .num {
   color: #607769;
   font-size: 0.76rem;
@@ -173,6 +287,7 @@ svg.icon {
   padding: 14px;
   border-top: 1px solid var(--line);
   margin-top: auto;
+  flex: none;
   font-size: 0.84rem;
 }
 .account-details {
@@ -690,6 +805,7 @@ dialog::backdrop {
     flex-shrink: 0;
     border-bottom: 1px solid var(--line);
   }
+  .side-stats { margin-top: .75rem; }
   #navigation .nav-main {
     display: none;
   }
@@ -800,6 +916,22 @@ dialog::backdrop {
     background: #17231b66;
     border: 0;
   }
+}
+@media (max-height: 32rem) {
+  #sidebar {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #sidebar .identity {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    min-height: 54px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+  }
+  .sidebar-content { flex: none; overflow: visible; }
 }
 @media (max-width: 580px) {
   main {

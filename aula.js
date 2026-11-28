@@ -163,6 +163,46 @@
     return { aciertos, errores, evaluadas, maximo_curso, escritas,
       porcentaje: evaluadas ? Math.round(100 * aciertos / evaluadas) : null };
   }
+  const progressPercent = new Intl.NumberFormat("es-ES", {style: "percent", maximumFractionDigits: 1});
+  const minutesPerQuestion = { comprension: 1, desarrollo: 5, final: 3 };
+  function duration(seconds) {
+    if (seconds < 60) return seconds + " s";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + " min";
+    const hours = Math.floor(minutes / 60), rest = minutes % 60;
+    return hours + " h" + (rest ? " " + rest + " min" : "");
+  }
+  function updateStudyTime() {
+    const el = $("#stat-active-time");
+    const value = duration(window.tiempo?.segundos() || 0);
+    if (el.textContent !== value) el.textContent = value;
+  }
+  let sidebarModule;
+  function updateSidebarStats() {
+    if (!sidebarModule) return;
+    const moduleCount = done(sidebarModule.questions);
+    const score = scoreSummary();
+    const totalCount = score.evaluadas + score.escritas;
+    const fillProgress = (name, count, total) => {
+      const el = $("#stat-" + name + "-progress");
+      el.textContent = progressPercent.format(count / total);
+      el.title = count + " de " + total + " preguntas respondidas";
+      $("#stat-" + name + "-meter").value = 100 * count / total;
+    };
+    $("#stat-module-label").textContent = "Módulo " + sidebarModule.number;
+    $("#stat-module-label").title = sidebarModule.title;
+    fillProgress("module", moduleCount, sidebarModule.questions.length);
+    fillProgress("course", totalCount, questions.size);
+    const accuracy = $("#stat-accuracy");
+    accuracy.textContent = score.evaluadas ? score.porcentaje + " %" : "Sin evaluar";
+    accuracy.title = score.evaluadas ? score.aciertos + " de " + score.evaluadas + " elecciones correctas"
+      : "Responde una pregunta de elección para ver tu porcentaje de aciertos";
+    let minutes = 0;
+    for (const q of questions.values()) {
+      if (!response(q)) minutes += minutesPerQuestion[q.type];
+    }
+    $("#stat-remaining-time").textContent = minutes ? "≈ " + duration(minutes * 60) : "0 min";
+  }
   function scorePanel() {
     const s = scoreSummary();
     return `<section class="panel score-panel" aria-labelledby="score-title">
@@ -177,8 +217,11 @@
         Las respuestas escritas se revisan aparte.</p>
     </section>`;
   }
-  function save(q, d) {
+  function save(q, d, updateStats = true) {
+    const previous = draft(q);
     drafts.set(q.id, d);
+    if (updateStats && (previous.mode !== d.mode || previous.choice !== d.choice ||
+        Boolean(previous.text.trim()) !== Boolean(d.text.trim()))) updateSidebarStats();
     if (cloud) { cloud.save(q.id, d); return; }
     try {
       localStorage.setItem(prefix + "r." + q.id, JSON.stringify(d));
@@ -729,10 +772,11 @@
       let added = 0;
       for (const [q, d] of ready) {
         if (drafts.has(q.id)) continue;
-        save(q, d);
+        save(q, d, false);
         added++;
       }
       review();
+      updateSidebarStats();
       notice("Se han añadido " + added + " respuestas al cuaderno.");
     });
   }
@@ -899,6 +943,9 @@
       (route.a ? itemName(route.a) : route.m?.title ||
         (route.page === "respuestas" ? "Mis respuestas" : "Fundamentos de Economía")) + " · MBA Training";
     if (route.page === "modulo" && route.a?.questions) remember(route.a.id);
+    sidebarModule = route.m || sidebarModule || items.get(lastId)?.m || modules[0];
+    updateSidebarStats();
+    updateStudyTime();
     if (navigation) {
       const practiceHeading = route.questionNumber && main.querySelector("#current-question");
       if (practiceHeading) {
@@ -936,6 +983,7 @@
     updateUnitProgress(fresh.closest("[data-unit]"), q);
   }
   function refreshDraft(q) {
+    updateSidebarStats();
     const card = main.querySelector('[data-q="' + CSS.escape(q.id) + '"]');
     if (card) redrawCard(card, q);
     else if (renderedPage !== "solucionario") {
@@ -1026,6 +1074,7 @@
     if (event.key === null) {
       drafts.clear();
       lastId = "";
+      sidebarModule = undefined;
       render();
       return;
     }
@@ -1062,7 +1111,7 @@
       toggle.focus();
     }
     if (e.key === "Tab") {
-      const links = [...$("#sidebar").querySelectorAll("a[href], button")].filter(el => el.getClientRects().length);
+      const links = [...$("#sidebar").querySelectorAll("a[href], button, summary")].filter(el => el.getClientRects().length);
       const target = e.shiftKey ? links.at(-1) : links[0];
       if (document.activeElement === (e.shiftKey ? links[0] : links.at(-1))) {
         e.preventDefault();
@@ -1107,12 +1156,14 @@
     .querySelectorAll("[data-icon]")
     .forEach((el) => (el.innerHTML = icon(el.dataset.icon)));
   window.addEventListener("hashchange", () => render(true));
+  window.addEventListener("tiempoactualizado", updateStudyTime);
   if (cloud) {
     cloud.start({
       closeNav,
       hasQuestion: (id) => questions.has(id),
       load(values, last) {
         drafts.clear();
+        sidebarModule = undefined;
         for (const [id, value] of Object.entries(values)) {
           const q = questions.get(id);
           if (q) drafts.set(id, normalized(q, value));
@@ -1129,6 +1180,14 @@
         window.voz?.detener();
         drafts.clear(); lastId = ""; query = ""; showPending = false; includeModels = true;
         renderedRoute = undefined; renderedPage = undefined;
+        sidebarModule = undefined;
+        $("#stat-module-meter").value = $("#stat-course-meter").value = 0;
+        $("#stat-module-label").textContent = "Módulo actual";
+        $("#stat-module-label").removeAttribute("title");
+        for (const el of document.querySelectorAll("#stat-module-progress, #stat-course-progress, #stat-accuracy, #stat-active-time, #stat-remaining-time")) {
+          el.textContent = "—";
+          el.removeAttribute("title");
+        }
         closeNav(); main.replaceChildren();
         $("#navigation").replaceChildren();
         $("#crumb").replaceChildren();
@@ -1139,6 +1198,7 @@
   } else {
     document.body.classList.remove("account-locked");
     $("#auth-screen").hidden = true;
+    window.tiempo?.iniciarLocal();
     render();
   }
 })();

@@ -30,6 +30,7 @@
     try {
       const response = await fetch("/api/" + path, {
         method, headers, credentials: "same-origin", mode: "same-origin", cache: "no-store",
+        keepalive: method === "PUT" && path === "activity",
         // Firefox necesita esta política para enviar Origin en escrituras a la API.
         referrerPolicy: "same-origin",
         redirect: "error", signal: controller.signal,
@@ -193,6 +194,7 @@
     resetAlert();
   }
   function lock(message) {
+    window.tiempo?.cerrar();
     ++epoch;
     clearTimeout(delay); state.ready = false; closing = false;
     logoutError = "";
@@ -278,7 +280,15 @@
     document.body.classList.remove("account-locked");
     get("#auth-screen").hidden = true; get("#account-tools").hidden = false;
     get("#account-user").textContent = user; get("#account-save").textContent = "";
-    state.ready = true; journal(); hooks.load(merged,state.last ?? remote.lastId ?? "");
+    state.ready = true;
+    window.tiempo?.iniciarCuenta(user, remote.activeSeconds, async (activity) => {
+      try { return await api("activity", "PUT", activity, user); }
+      catch (error) {
+        if (error.status === 401 && epoch === generation && state.ready && !closing) lock("La sesión ha terminado.");
+        throw error;
+      }
+    });
+    journal(); hooks.load(merged,state.last ?? remote.lastId ?? "");
     schedule(0);
   }
   async function check() {
@@ -353,9 +363,14 @@
     const shell = get(".shell"), sidebar = get("#sidebar");
     const shellWasInert = shell.inert, sidebarWasInert = sidebar.inert;
     closing = true; logoutError = ""; shell.inert = sidebar.inert = true;
+    window.tiempo?.suspender();
     try {
+      const activity = window.tiempo?.sincronizar();
       await flush();
       if(!state.ready || dirty())return;
+      // La actividad ya está en su diario por cuenta. Una red lenta no debe
+      // impedir cerrar sesión después de guardar las respuestas.
+      if (activity) await Promise.race([activity, new Promise(resolve => setTimeout(resolve, 2000))]);
       await api("logout","POST",{},state.user);
       journal(); state.user=""; channel?.postMessage("session");
       lock("Sesión cerrada.");
@@ -368,6 +383,7 @@
       }
     } finally {
       closing = false; shell.inert = shellWasInert; sidebar.inert = sidebarWasInert;
+      if (state.ready) window.tiempo?.reanudar();
       const warning = get("#save-warning");
       if (state.ready && !warning.hidden) warning.querySelector("button")?.focus();
     }

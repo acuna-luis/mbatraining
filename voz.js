@@ -347,5 +347,5 @@
   }
   window.addEventListener("hashchange", detener);
   window.addEventListener("pagehide", detener);
-  window.voz = Object.freeze({ montar, detener });
+  window.voz = Object.freeze({ montar, detener, get reproduciendo() { return status === "playing" && Boolean(host?.isConnected); } });
 })();

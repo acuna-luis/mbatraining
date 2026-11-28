@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#103e35" />
     <title>Fundamentos de Economía · MBA Training</title>
     <link rel="icon" href="assets/marca.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="aula.css?v=4" />
+    <link rel="stylesheet" href="aula.css?v=5" />
     <link rel="stylesheet" href="escritorio.css?v=4" />
     <link rel="stylesheet" href="estudio.css?v=4" />
     <link rel="stylesheet" href="escucha.css?v=1" />
@@ -20,10 +20,11 @@
     <script defer src="data/referencias.js"></script>
     <script defer src="data/finales.js"></script>
     <script defer src="documento.js?v=2"></script>
-    <script defer src="nube.js?v=4"></script>
+    <script defer src="tiempo.js?v=1"></script>
+    <script defer src="nube.js?v=5"></script>
     <script defer src="voz-ui.js?v=1"></script>
-    <script defer src="voz.js?v=1"></script>
-    <script defer src="aula.js?v=6"></script>
+    <script defer src="voz.js?v=2"></script>
+    <script defer src="aula.js?v=7"></script>
   </head>
   <body class="account-locked">
     <div id="auth-screen" class="auth-screen" role="main" aria-labelledby="auth-title">
@@ -76,7 +77,28 @@
         <a href="#inicio"><img src="assets/marca.svg" width="36" height="36" alt=""><span>MBA Training</span></a>
         <button id="close-nav" class="icon-btn mobile" type="button" aria-label="Cerrar temario" data-icon="close"></button>
       </div>
-      <nav id="navigation" aria-label="Curso"></nav>
+      <div class="sidebar-content">
+        <section class="side-stats" aria-labelledby="side-stats-title">
+          <h2 id="side-stats-title"><span data-icon="trend"></span>Tu progreso</h2>
+          <dl>
+            <div class="stat-with-meter">
+              <dt><span class="sr">Avance en </span><span id="stat-module-label">Módulo actual</span></dt><dd id="stat-module-progress">—</dd>
+              <dd class="stat-meter" aria-hidden="true"><progress id="stat-module-meter" aria-hidden="true" value="0" max="100"></progress></dd>
+            </div>
+            <div class="stat-with-meter">
+              <dt>Avance del curso</dt><dd id="stat-course-progress">—</dd>
+              <dd class="stat-meter" aria-hidden="true"><progress id="stat-course-meter" aria-hidden="true" value="0" max="100"></progress></dd>
+            </div>
+            <div><dt>Aciertos</dt><dd id="stat-accuracy">—</dd></div>
+            <div class="study-time"><dt>Tiempo activo total</dt><dd id="stat-active-time">—</dd></div>
+          </dl>
+          <details class="time-estimate">
+            <summary><span>Tiempo restante</span><strong id="stat-remaining-time">—</strong><span class="sr">. Cómo se calcula la estimación</span></summary>
+            <p>La estimación suma las preguntas pendientes. Cuenta 1 min por pregunta de comprensión, 5 min por desarrollo y 3 min por caso final.</p>
+          </details>
+        </section>
+        <nav id="navigation" aria-label="Curso"></nav>
+      </div>
       <div class="side-foot">
         <span class="account-symbol" data-icon="user"></span>
         <div class="account-details">

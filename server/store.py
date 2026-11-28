@@ -31,6 +31,12 @@ CREATE TABLE IF NOT EXISTS drafts (
     revision INTEGER NOT NULL CHECK(revision > 0),
     PRIMARY KEY(user_id, qid)
 );
+CREATE TABLE IF NOT EXISTS study_activity (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    activity_id TEXT NOT NULL,
+    seconds INTEGER NOT NULL CHECK(seconds BETWEEN 0 AND 2147483647),
+    PRIMARY KEY(user_id, activity_id)
+) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS attempts (
     scope TEXT PRIMARY KEY,
     since INTEGER NOT NULL,

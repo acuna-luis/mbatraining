@@ -68,7 +68,7 @@ class CourseApiTests(unittest.TestCase):
         self.assertEqual(self.req("PUT",self.url,self.payload,a,HTTP_X_MBA_USER="bea")[0],401)
         self.assertEqual(self.req("PUT",self.url,self.payload,a)[0:2],(200,{"revision":1}))
         self.assertEqual(self.req("PUT","/api/last",{"lastId":"1.0"},a)[0],200)
-        self.assertEqual(self.req("GET","/api/state",cookie=b)[1],{"drafts":{},"lastId":""})
+        self.assertEqual(self.req("GET","/api/state",cookie=b)[1],{"drafts":{},"lastId":"","activeSeconds":0})
         state=self.req("GET","/api/state",cookie=a)[1]
         self.assertEqual(state["drafts"][self.q["id"]],dict(self.payload,revision=1))
         self.assertEqual(state["lastId"],"1.0")
@@ -110,6 +110,58 @@ class CourseApiTests(unittest.TestCase):
         self.assertEqual(write(conflict["text"])[0:2],(200,{"revision":1}))
         self.assertEqual(self.req("PUT",self.url,dict(self.payload,text="",choice="",revision=1),cookie)[1],{"revision":2})
         self.assertEqual(self.req("GET","/api/state",cookie=cookie)[1]["drafts"][self.q["id"]]["choice"],"")
+
+    def test_activity_totals_use_max_per_record_and_survive_unordered_concurrent_retries(self):
+        cookie = self.login("ana")
+        first = "7a970454-21bd-40ce-a54f-fa7e5be47102"
+        second = "870454ac-21bd-40ce-a54f-fa7e5be47133"
+
+        def write(key, seconds):
+            return self.req("PUT", "/api/activity", {"activityId": key, "seconds": seconds}, cookie)[:2]
+
+        self.assertEqual(write(first, 0), (200, {"activeSeconds": 0, "recordSeconds": 0}))
+        samples = [(first, 18), (second, 12), (first.upper(), 25), (second, 5), (first, 18), (first, 25)]
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            replies = list(pool.map(lambda pair: write(*pair), samples))
+        for (code, totals), (_, sent) in zip(replies, samples):
+            self.assertEqual(code, 200)
+            self.assertGreaterEqual(totals["recordSeconds"], sent)
+            self.assertGreaterEqual(totals["activeSeconds"], totals["recordSeconds"])
+        self.assertEqual(write(first, 0), (200, {"activeSeconds": 37, "recordSeconds": 25}))
+        self.assertEqual(write(second, 12), (200, {"activeSeconds": 37, "recordSeconds": 12}))
+        self.assertEqual(self.req("GET", "/api/state", cookie=cookie)[1]["activeSeconds"], 37)
+
+    def test_activity_validates_and_binds_each_measurement_to_the_authenticated_account(self):
+        ana = self.login("ana")
+        bea = self.login("bea")
+        payload = {"activityId": "870454ac-21bd-40ce-a54f-fa7e5be47133", "seconds": 30}
+        send = lambda fields, cookie="", **kwargs: self.req("PUT", "/api/activity", fields, cookie, **kwargs)[:2]
+        self.assertEqual(send(payload)[0], 401)
+        self.assertEqual(send(payload, ana, HTTP_X_MBA_USER="bea")[0], 401)
+        self.assertEqual(send(payload, ana, HTTP_ORIGIN="https://otro.test")[0], 403)
+        for bad in ({"activityId": None}, {"activityId": "no-es-un-identificador"},
+                    {"seconds": True}, {"seconds": -1}, {"seconds": 1.5}, {"seconds": 2**31}):
+            with self.subTest(bad=bad):
+                self.assertEqual(send(dict(payload, **bad), ana), (422, {"error": "invalid_activity"}))
+        self.assertEqual(send(payload, ana), (200, {"activeSeconds": 30, "recordSeconds": 30}))
+        self.assertEqual(send(dict(payload, seconds=10), bea), (200, {"activeSeconds": 10, "recordSeconds": 10}))
+        self.assertEqual(self.req("GET", "/api/state", cookie=ana)[1]["activeSeconds"], 30)
+
+    def test_activity_migration_preserves_existing_accounts_sessions_and_answers(self):
+        cookie = self.login("ana")
+        self.assertEqual(self.req("PUT", self.url, self.payload, cookie)[0], 200)
+        self.assertEqual(self.req("PUT", "/api/last", {"lastId": "1.0"}, cookie)[0], 200)
+        with closing(store.connect()) as db:
+            db.execute("DROP TABLE study_activity")
+        store.initialize()
+        state = self.req("GET", "/api/state", cookie=cookie)[1]
+        self.assertEqual(state["activeSeconds"], 0)
+        self.assertEqual(state["lastId"], "1.0")
+        self.assertEqual(state["drafts"][self.q["id"]], dict(self.payload, revision=1))
+        data = {"activityId": "d2965475-161d-48a4-a54f-fa7e5be47133", "seconds": 20}
+        self.assertEqual(self.req("PUT", "/api/activity", data, cookie)[0], 200)
+        store.initialize()
+        self.assertEqual(self.req("GET", "/api/state", cookie=cookie)[1]["activeSeconds"], 20)
 
     def test_account_limit_applies_across_forwarded_ips(self):
         cookie=self.login("eva")

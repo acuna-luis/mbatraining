@@ -4,6 +4,7 @@ import hmac
 import ipaddress
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
@@ -19,6 +20,7 @@ LIFETIME = 14 * 24 * 3600
 WINDOW = 10 * 60
 TEXT_LIMIT = 32000
 MAX_BODY = 256 * 1024
+ACTIVITY_ID = re.compile(r"[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}")
 COOKIE_ATTRIBUTES = "; Path=/; HttpOnly; Secure; SameSite=Lax"
 DUMMY_PASSWORD = store.encode_password(secrets.token_hex(32))
 
@@ -175,6 +177,27 @@ def save_draft(db, user, qid, data):
     return {"revision": revision+1}
 
 
+def active_seconds(db, user):
+    return db.execute("SELECT COALESCE(SUM(seconds), 0) FROM study_activity WHERE user_id=?",
+                      (user,)).fetchone()[0]
+
+
+def save_activity(db, user, data):
+    activity_id, seconds = data.get("activityId"), data.get("seconds")
+    if (not isinstance(activity_id, str) or not ACTIVITY_ID.fullmatch(activity_id)
+            or type(seconds) is not int or not 0 <= seconds < 2**31):
+        raise Denied(422, "invalid_activity")
+    key = (user, activity_id.lower())
+    if seconds:
+        db.execute("""
+            INSERT INTO study_activity(user_id, activity_id, seconds) VALUES(?,?,?)
+            ON CONFLICT(user_id, activity_id) DO UPDATE SET seconds=excluded.seconds
+            WHERE excluded.seconds > study_activity.seconds
+        """, (*key, seconds))
+    record = db.execute("SELECT seconds FROM study_activity WHERE user_id=? AND activity_id=?", key).fetchone()
+    return {"activeSeconds": active_seconds(db, user), "recordSeconds": record[0] if record else 0}
+
+
 def dispatch(db, env):
     method, path = env["REQUEST_METHOD"], env["PATH_INFO"]
     if method not in ("GET", "POST", "PUT"):
@@ -199,7 +222,9 @@ def dispatch(db, env):
         for item in items:
             draft = dict(item)
             drafts[draft.pop("qid")] = draft
-        return {"drafts": drafts, "lastId": account["last_id"]}, []
+        return {"drafts": drafts, "lastId": account["last_id"], "activeSeconds": active_seconds(db, account["id"])}, []
+    if path == "/api/activity" and method == "PUT":
+        return save_activity(db, account["id"], data), []
     if path == "/api/last" and method == "PUT":
         last = data.get("lastId")
         if not isinstance(last, str) or (last and last not in UNITS):
