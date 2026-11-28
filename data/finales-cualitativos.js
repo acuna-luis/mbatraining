@@ -14,7 +14,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 1,
     "explanation": "La tarde de limpieza cuesta lo que se deja de ganar con la hornada de ese turno. Si una sola panadera pierde esas ventas y el ahorro de leña se reparte, puede dejar pasar una limpieza que convendría al grupo. Compartir el coste le da un motivo para cuidar el horno del que todas dependen.\n\nEl pedido abre una oportunidad de intercambio, pero su valor depende de lo que las familias puedan conseguir después de cubrir el trabajo y la leña. Para hablar de inflación habría que mirar también otros precios. El del pan por sí solo tampoco revela qué ha hecho el banco central.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "A quien limpia le corresponde solo una parte del ahorro de leña, aunque pierde las ventas de toda su hornada. Podría salirle más a cuenta esperar a que limpie otra.",
+      null,
+      "El horno tiene un uso valioso incluso sin alquiler. Cada tarde que se reserva para limpiar se renuncia al pan que se habría podido vender ese día.",
+      "El pan más caro puede elevar la facturación aunque se vendan las mismas hogazas. Para valorar el pedido hay que descontar sus costes y ver qué pueden comprar las panaderas con el ingreso restante."
+    ]
   },
   {
     "module": 2,
@@ -31,7 +37,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 3,
     "explanation": "La grabadora de hoy permite conservar voces que mañana serán inaccesibles. El valor de otra unidad depende del uso que todavía pueda atender.\n\nClara tiene ventaja absoluta en ambas tareas, pero pierde más entrevistas por cada grabación que edita. Luis tiene la ventaja comparativa en edición. Repartir las tareas de ese modo aprovecha el conocimiento de ambos y el poco tiempo disponible. Si los artesanos se quedaran otra semana, tendría sentido volver a valorar la oferta de la tienda.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "Mañana tendrán más aparatos, pero los artesanos ya se habrán marchado. Editar hoy las entrevistas antiguas deja pasar la única tarde en que aún se pueden grabar esas voces.",
+      "Clara vaciaría antes la cola de edición, pero cada grabación que edita cuesta al museo más entrevistas que si la editara Luis. La tarea urgente es recoger los testimonios que aún faltan.",
+      "Alternar por turnos iguales pasa por alto lo que cada uno deja de hacer. En el turno en que Clara edite y Luis entreviste se recogerán menos testimonios que si Clara sigue con la grabadora.",
+      null
+    ]
   },
   {
     "module": 3,
@@ -48,7 +60,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 0,
     "explanation": "La comparación decisiva se hace al precio de la pizarra. Ahora hay viajeros dispuestos a comprar a ese precio, y el menor coste permite a los puestos ofrecer más. Se han desplazado las dos curvas.\n\nPara la clienta habitual siguen iguales tanto lo máximo que pagaría como lo que paga. Para el cocinero, en cambio, ha bajado el coste de servir esa misma ración. El precio observado puede quedarse quieto aunque hayan cambiado los planes y las ganancias del intercambio.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      null,
+      "Para moverse sobre la curva de oferta anterior tendría que cambiar el precio del menú. Aquí cambia el coste de cocinar, de modo que hasta las raciones que el puesto ya vendía dejan más excedente.",
+      "A los viajeros los trae el autobús y pagan lo mismo que los demás. La clienta habitual tampoco recibe el ahorro de la cocina como descuento, así que su menú le deja el mismo excedente.",
+      "La pizarra muestra cuánto cobra el puesto, pero no cuánto le cuesta servir el plato. Al bajar ese coste y mantenerse el precio de venta, el cocinero gana más excedente por la misma ración."
+    ]
   },
   {
     "module": 4,
@@ -65,7 +83,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 2,
     "explanation": "El máximo que un taller está dispuesto a ofrecer depende de lo que añade esa jornada a sus ingresos, una vez descontados los otros costes del encargo. El cobro tardío e incierto reduce ese máximo en dinero de hoy. La facturación total del taller grande dice poco sobre lo que ganaría contratándola el viernes.\n\nDel otro lado del mercado, la restauradora compara las ofertas con lo que sacrificaría en la feria. Si la feria le ofrece más de lo que esa jornada vale hoy para el pequeño, a él no le compensa igualar la oferta y ella puede elegir la feria.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "La facturación media incluye pedidos que el taller grande puede entregar sin contratarla. Para valorar el viernes interesa qué pedidos o ingresos adicionales haría posibles esa jornada.",
+      "La restauradora cobraría hoy un importe que el taller solo espera recibir dentro de varios meses. El riesgo de impago y los demás costes del encargo reducen lo que le compensa ofrecer.",
+      null,
+      "La feria sigue siendo una alternativa para la restauradora. Superar al taller grande puede dejar la oferta del pequeño por debajo de lo que a ella le compensa cobrar por renunciar a la feria."
+    ]
   },
   {
     "module": 5,
@@ -82,7 +106,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 0,
     "explanation": "Cuando el móvil nuevo se encarece, arreglar el antiguo resulta más atractivo. Además, en este barrio se recurre más al arreglo cuando baja la renta real. Decir que aquí se comporta como un bien inferior describe esa respuesta de la demanda, sin juzgar la calidad del servicio.\n\nAnte una pequeña subida de la propia tarifa, lo ganado por cada reparación supera lo perdido por los encargos que se cancelan. El límite inmediato son las horas disponibles. La formación permite ofrecer más citas después, incluso aunque hoy haya lista de espera.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      null,
+      "La facturación depende de la tarifa y del número de arreglos. En las pruebas del barrio, el cobro adicional por las citas que se mantuvieron superó lo que se perdió por las canceladas.",
+      "Si comprar y reparar se complementaran, el móvil nuevo más caro desanimaría también el arreglo. En este barrio, el aumento de encargos cuando comprar se encarece apunta a que las familias sustituyen la compra por el arreglo.",
+      "Las horas de los técnicos ya están comprometidas esta semana. Formar a otra persona puede abrir huecos en unos meses, pero no libera ninguna de las citas de hoy."
+    ]
   },
   {
     "module": 6,
@@ -99,7 +129,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 2,
     "explanation": "Hoy compite por un palé quien lo necesita enseguida con quien espera necesitarlo durante la cosecha. Si el envío llega a tiempo, al almacén puede haberle salido caro esperar. La carpintera ve otra oportunidad en la misma señal de precio y puede aportar palés que nadie pensaba aprovechar.\n\nCon un máximo por debajo del precio que igualaría pedidos y entregas, algunas cooperativas pueden conseguir palés más baratos y otras quedarse sin ellos. Vender enseguida toda la producción tampoco ayuda a la carpintera si el precio permitido no cubre la reparación. Las unidades sin comprador son el problema característico de un mínimo demasiado alto.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "Al precio máximo bajo, las cooperativas querrán comprar más palés de los que se ofrecerán. Quedarán pedidos sin servir. Los palés sin comprador serían propios de un precio mínimo demasiado alto.",
+      "Si el envío llega a tiempo, el almacén puede arrepentirse de haber aplazado sus ventas. El máximo limita el precio que pagaría una cooperativa si consigue un palé, pero no le reserva ninguno.",
+      null,
+      "Tener comprador para cada palé sirve de poco si el precio permitido no cubre arreglarlo. El tope también puede recortar lo que espera ganar el almacén por guardarlo hasta la cosecha."
+    ]
   },
   {
     "module": 7,
@@ -116,7 +152,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 1,
     "explanation": "La taquilla pasa por alto tanto el disfrute en los balcones como el sueño perdido. La pregunta es qué cambia al añadir una actuación concreta. Un festival muy valioso en conjunto puede terminar con un concierto cuyo daño supera lo que aporta. La misma actuación al atardecer puede tener un saldo distinto.\n\nCon pocos afectados, acordar un horario o una compensación podría ser barato. Aquí coordinar muchas calles cuesta tiempo. Un límite nocturno merece consideración si el descanso que protege compensa la música que se pierde y el coste de hacerlo cumplir.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "Los beneficios de los conciertos anteriores se obtienen aunque el festival cierre antes. Un buen resultado para toda la jornada puede ocultar que la última actuación cuesta al barrio más de lo que aporta.",
+      null,
+      "Tanto la vecina que escucha desde el balcón como quien pierde el sueño pueden quedarse sin comprar entrada. La taquilla dejaría fuera dos efectos que cambian con el horario.",
+      "Con la misma tasa a cualquier hora, adelantar el concierto ahorraría molestias a los vecinos, pero al organizador le costaría lo mismo. El cargo medio deja escapar ese incentivo."
+    ]
   },
   {
     "module": 8,
@@ -133,7 +175,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 3,
     "explanation": "Oír el parte deja intacta la señal para los demás y resulta difícil cobrar a cada oyente. En los mapas sí se puede reservar el acceso a suscriptores. Una misma descarga sirve a muchos usuarios sin agotarse. Ese bien de club permite financiar con las cuotas parte de la emisión abierta.\n\nEn el prado, cada tienda ocupa espacio que otra persona podría usar. Un cupo ayuda a conservar ese recurso común. Una plaza reservada, como bien privado, puede asignarse a una sola tienda. El refugio tiene el problema inverso, el de los anticomunes. Cada copropietario puede frenar por separado una obra valiosa para el valle. Delegar la autorización de común acuerdo permitiría usarlo.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "Cualquier montañero puede encender la radio aunque nunca haya pagado. Al abrir también los mapas, la asociación renunciaría a cobrar por el acceso que sí puede reservar a suscriptores.",
+      "Un oyente más puede sintonizar el parte sin estorbar a nadie. Una tienda más necesita espacio en un prado que ya se llena, de modo que dejar entrar a todos agrava la saturación.",
+      "Cada nuevo propietario con derecho de veto añade otra persona capaz de detener la obra. El refugio podría seguir vacío incluso si los nuevos socios aportaran dinero.",
+      null
+    ]
   },
   {
     "module": 9,
@@ -150,7 +198,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 2,
     "explanation": "Una calle impecable y otra abandonada pueden parecer idénticas en el registro si nadie avisa desde ninguna de las dos. Visitar ambas corrige ese vacío de información. Comprobar si el bache vuelve permite distinguir una reparación duradera de varias facturas por el mismo problema.\n\nEl contrato premia cada nueva intervención, la asociación logró excluir una alternativa y al alcalde le conviene una cifra vistosa antes de las elecciones. Contar los partes con más cuidado deja esos incentivos intactos. Comparar la duración y el coste de reparar y prevenir ayuda a elegir según el resultado que buscan los vecinos.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "Un barrio puede escalar en la lista cada vez que se vuelve a tapar el mismo bache. Otro con calles peores puede quedar al final simplemente porque sus vecinos han dejado de avisar.",
+      "Aunque la asociación confirme que se hizo el parche, la factura no revela qué averías habría evitado el mantenimiento. Además, se le estaría pidiendo que evalúe la alternativa que ella misma excluyó del contrato.",
+      null,
+      "Después de las elecciones, volver a tapar el mismo bache seguirá sumando otro parte cerrado. Aplazar el recuento deja sin medir cuánto duró la reparación."
+    ]
   },
   {
     "module": 10,
@@ -167,7 +221,13 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 0,
     "explanation": "Para los impresores está en juego un contrato entero. Para un votante, estudiar el informe exige tiempo y su voto rara vez será decisivo. Saltarse la lectura puede ser una elección razonable. La vecina que sí leyó muestra algo distinto al dar por hecho que ahorrar trabajo empobrece, sin considerar qué otras tareas podrían hacerse con ese tiempo.\n\nPuede haber una mayoría para el papel frente al sistema mixto, otra para el mixto frente al digital y otra para el digital frente al papel. Cada vecino puede tener un orden de preferencias coherente y, aun así, quien organiza las rondas influye en qué opción sobrevive. La prensa permite examinar esa decisión en público.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      null,
+      "A los impresores les compensa movilizarse por un contrato importante. Un vecino puede preferir el billete digital y aun así dedicar su tiempo a otra cosa si cree que su participación apenas influirá.",
+      "Un resumen ahorraría tiempo a quienes pospusieron la lectura. La vecina ya leyó el informe y pasa por alto que las horas que se ahorran al emitir billetes podrían dedicarse a otras tareas.",
+      "El papel puede ganar al sistema mixto, el mixto al digital y el digital al papel. En cada duelo vota una mayoría distinta. El ciclo puede aparecer aunque cada vecino haya ordenado sus preferencias de forma coherente."
+    ]
   },
   {
     "module": 11,
@@ -184,6 +244,12 @@ window.FINALES_CUALITATIVOS = [
     ],
     "correctIndex": 1,
     "explanation": "Con la ayuda, los talleres reciben el precio de venta más el subsidio. Pueden aceptar tiradas que antes no les compensaban. Como siguen entrando cuadernos idénticos al precio mundial, las familias compran al mismo precio. El contribuyente financia la ayuda. Parte del gasto público llega a los talleres como ingreso. El coste en recursos surge cuando fabricar aquí una unidad exige más que traerla de fuera.\n\nCon un arancel, reponer un cuaderno importado se encarece y también sube el precio que pueden cobrar los talleres. Un impuesto sobre todos los cuadernos encarecería ambos orígenes sin dar ventaja al nacional. Quién entrega el dinero al fisco no decide quién acaba soportando la carga.",
-    "qualitative": true
+    "qualitative": true,
+    "optionReasons": [
+      "Para reponer un cuaderno importado, la papelería tendría que cubrir el precio mundial más el arancel. El lugar donde se paga ese recargo apenas le importa a la familia que encuentra más caro el cuaderno en la tienda.",
+      null,
+      "La papelería sigue pagando el precio mundial al reponer y debe cubrir el impuesto al vender. Como el gravamen alcanza a los dos tipos de cuaderno, tampoco da al comprador un motivo para elegir el nacional.",
+      "Mientras sigan entrando cuadernos al precio mundial, las familias seguirán comprando a ese precio. Contar todo el subsidio como pérdida incluye también el dinero que simplemente pasó del contribuyente al taller."
+    ]
   }
 ];

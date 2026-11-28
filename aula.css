@@ -715,18 +715,18 @@ dialog img {
   width: 100%;
   height: auto;
 }
-.read-card table {
+.reading-table table {
   border-collapse: collapse;
   width: 100%;
   margin: 18px 0;
 }
-.read-card th,
-.read-card td {
+.reading-table th,
+.reading-table td {
   text-align: left;
   border-bottom: 1px solid var(--line);
   padding: 8px;
 }
-.read-card th {
+.reading-table th {
   background: var(--tint);
 }
 .q-card {
@@ -1022,7 +1022,7 @@ dialog::backdrop {
     z-index: 9;
     inset: auto 0 0;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, .9fr)) repeat(2, minmax(0, 1.15fr));
     min-height: calc(var(--tab-height) + env(safe-area-inset-bottom));
     padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     background: #fff;

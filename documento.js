@@ -141,6 +141,12 @@
           for (const q of a.preguntas) {
             body.push(para(q.id + " · " + q.referencia));
             if (q.explicacion) body.push(para(q.explicacion));
+            if (q.motivos_descarte) {
+              body.push(para("Por qué se descartan las otras opciones", "Question"));
+              q.motivos_descarte.forEach((reason, i) => {
+                if (reason) body.push(para("Opción " + String.fromCharCode(65 + i) + ". " + reason));
+              });
+            }
           }
         }
     }

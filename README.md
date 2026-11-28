@@ -10,6 +10,10 @@ Cuaderno interactivo de Fundamentos de Economía. Entra en el [aula por HTTPS](h
 
 Al final de **Temario**, abre **Preguntas pendientes** para ver tus respuestas incorrectas y las preguntas sin contestar, agrupadas por módulo. Toca el enunciado para abrir ese ejercicio. La flecha junto al título permite usar la misma lista desde la barra lateral. La lista se actualiza cada vez que cambias una respuesta.
 
+En **Gráficos** puedes repasar los gráficos y tablas del curso por módulo. Cada recurso incluye una pregunta de recuerdo, una explicación que puedes desplegar y un enlace a su lectura. Toca cualquier gráfico para ampliarlo.
+
+En los casos finales cualitativos, **Ver respuesta correcta** explica también por qué se descarta cada una de las otras tres opciones. Puedes consultar esos motivos en el solucionario o incluirlos al descargar las respuestas con referencias.
+
 Las ecuaciones de las lecturas, las preguntas y el solucionario se muestran con fracciones, potencias y subíndices. Debajo de los gráficos con ecuaciones, **Fórmulas del gráfico** permite consultarlas por separado. La versión sin conexión incluye KaTeX y sus fuentes. Las expresiones del curso y su notación LaTeX están en el [catálogo de fórmulas](data/formulas.js).
 
 La barra lateral, disponible en **Temario** desde el móvil, muestra el porcentaje de preguntas respondidas del módulo y del curso, y el porcentaje de aciertos en las elecciones. El tiempo activo comienza a registrarse con esta actualización y se acumula en tu cuenta. El contador se pausa al salir del aula o tras dos minutos de inactividad y continúa durante la narración en primer plano. El tiempo restante es orientativo y se recalcula con cada respuesta. Cuenta un minuto por pregunta de comprensión, cinco por desarrollo y tres por caso final.

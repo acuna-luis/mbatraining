@@ -319,6 +319,7 @@
     });
     const destinations = [
       ["home", "#inicio", "grid", "Vista general"],
+      ["graphics", "#graficos", "bars", "Gráficos"],
       ["answers", "#respuestas", "sheet", "Mis respuestas"],
       ["solutions", "#solucionario", "book", "Solucionario"],
     ];
@@ -482,6 +483,60 @@
       </select></label>`;
   }
 
+  const visuals = [];
+  for (const m of modules) {
+    for (const a of m.items) {
+      if (a.figure) visuals.push({m, a, key: a.id, type: "graficos", figure: a.figure});
+      if (a.table) visuals.push({m, a, key: a.id, type: "tablas"});
+      if (a.id === "4.7") visuals.push({m, a, key: "portada", type: "graficos", title: "Equilibrio de mercado",
+        figure: { src: "assets/mercado.svg", alt: "La oferta asciende y la demanda desciende. Desde su cruce, las líneas de puntos señalan el precio y la cantidad de equilibrio." }});
+    }
+  }
+  function visualCard({a, key, type, title, figure}) {
+    const recall = window.REPASO_VISUAL[key];
+    const caption = type === "tablas" ? "Tabla" : key === "portada" ? "Gráfico de portada" : "Gráfico";
+    return `<article class="visual-card">
+      <div class="visual-heading"><p class="eyebrow">${caption} · ${esc(a.id)}</p>
+        <h3>${mathText(title || a.title)}</h3></div>
+      ${figure ? figureMarkup(figure, key) : tableMarkup(a)}
+      ${recall ? `<div class="visual-recall"><p>${mathText(recall.prompt)}</p>
+        <details class="recall-answer"><summary>Ver explicación</summary><p>${mathText(recall.answer)}</p></details></div>` : ""}
+      <a class="visual-source" href="${link(a)}">${icon("book")} Estudiar apartado ${esc(a.id)}</a>
+    </article>`;
+  }
+  function galleryLink(moduleNumber, type) {
+    if (type !== "todos") return "#graficos/" + (moduleNumber || "todos") + "/" + type;
+    return moduleNumber ? "#graficos/" + moduleNumber : "#graficos";
+  }
+  function graphicsPage(m, type) {
+    nav("graphics");
+    crumb("Gráficos");
+    const selected = visuals.filter(v => (!m || v.m === m) && (type === "todos" || type === v.type));
+    const tables = selected.filter(v => v.type === "tablas").length, charts = selected.length - tables;
+    const count = [charts && charts + (charts === 1 ? " gráfico" : " gráficos"),
+      tables && tables + (tables === 1 ? " tabla" : " tablas")].filter(Boolean).join(" · ") || "Sin resultados";
+    const groups = (m ? [m] : modules).map(mod => {
+      const cards = selected.filter(v => v.m === mod);
+      return cards.length ? `<section class="gallery-module" aria-labelledby="gallery-m${mod.number}">
+        <h2 id="gallery-m${mod.number}"><small>Módulo ${mod.number}</small>${esc(mod.title)}</h2>
+        <div class="gallery-grid">${cards.map(visualCard).join("")}</div></section>` : "";
+    }).join("");
+    main.innerHTML = `<div class="visual-gallery"><header><h1 class="page-title">Gráficos</h1>
+      <p>Observa cada gráfico o tabla, responde la pregunta y abre la explicación para comprobar tu idea.</p></header>
+      <div class="gallery-filters"><label>Módulo<select id="gallery-module" aria-describedby="gallery-count"><option value="">Todos los módulos</option>
+        ${modules.map(mod => `<option value="${mod.number}"${mod === m ? " selected" : ""}>${mod.number}. ${esc(mod.title)}</option>`).join("")}
+      </select></label><label>Material<select id="gallery-type" aria-describedby="gallery-count">
+        <option value="todos">Todo</option><option value="graficos">Gráficos</option><option value="tablas">Tablas</option>
+      </select></label><p class="gallery-count" id="gallery-count" role="status">${count}</p></div>
+      ${groups || `<div class="gallery-empty"><p>Este módulo no tiene ${type === "tablas" ? "tablas" : "gráficos"}.</p>
+        <a class="quiet" href="${galleryLink(m?.number, "todos")}">Ver todo el módulo</a>
+        <a class="quiet" href="${galleryLink(null, type)}">Ver todos los módulos</a></div>`}
+      </div>`;
+    const moduleSelect = $("#gallery-module"), typeSelect = $("#gallery-type");
+    typeSelect.value = type;
+    $(".gallery-filters").onchange = () => goToHash(galleryLink(moduleSelect.value, typeSelect.value));
+  }
+
   function modulePage(m, a, questionNumber) {
     nav("", m.number);
     crumb("Módulo " + m.number);
@@ -624,8 +679,12 @@
   }
   function answerMarkup(q) {
     if (q.type !== "final") return '<p class="answer-preview" data-voz-texto>' + mathText(reference(q)) + '</p>';
+    const reasons = q.optionReasons ? '<h3 class="reasons-title" data-voz-texto>Por qué se descartan las otras opciones</h3>' +
+      '<ul class="option-reasons">' + q.optionReasons.map((reason, i) => reason
+        ? '<li data-voz-texto><strong>Opción ' + String.fromCharCode(65 + i) + '.</strong> ' + mathText(reason) + '</li>'
+        : '').join('') + '</ul>' : '';
     return '<p class="answer-preview" data-voz-texto><strong>' + mathText(optionLabel(q, q.correctIndex)) +
-      '</strong></p><div class="case-reason">' + paragraphs(q.explanation) + '</div>';
+      '</strong></p><div class="case-reason">' + paragraphs(q.explanation) + '</div>' + reasons;
   }
   function unitCount(a) {
     if (a.isFinal) return done(a.questions) ? "Respondida" : "Pendiente";
@@ -644,18 +703,24 @@
       <div data-voz></div>${questionCard(q, number)}</section>`;
   }
 
-  function readingMarkup(a, practiceUrl) {
-    const table = a.table ? `<div class="reading-table" data-voz-texto="${esc(a.table.map(row => row.join(", ")).join(". "))}"><table><thead><tr>
+  function tableMarkup(a) {
+    return `<div class="reading-table" data-voz-texto="${esc(a.table.map(row => row.join(", ")).join(". "))}"><table aria-label="${esc(a.title)}"><thead><tr>
       ${a.table[0].map((cell) => `<th scope="col">${mathText(cell)}</th>`).join("")}</tr></thead>
       <tbody>${a.table.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${mathText(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
-      </table></div>` : "";
-    const chartEquations = a.figure ? [...new Set(Array.from(formulaMatches(a.figure.alt), (match) => match.source)
-      .filter(source => /[=≈<>≤≥×÷/]| [−+] /.test(source)))] : [];
-    const figure = a.figure ? `<button class="figure-btn" data-zoom="${esc(a.id)}">
-        <img loading="lazy" src="${esc(a.figure.src)}" alt="${esc(a.figure.alt)}" data-voz-texto="${esc(a.figure.alt)}">
+      </table></div>`;
+  }
+  function figureMarkup(figure, id) {
+    const chartEquations = [...new Set(Array.from(formulaMatches(figure.alt), (match) => match.source)
+      .filter(source => /[=≈<>≤≥×÷/]| [−+] /.test(source)))];
+    return `<button type="button" class="figure-btn" data-zoom="${esc(id)}" aria-haspopup="dialog">
+        <img loading="lazy" src="${esc(figure.src)}" alt="${esc(figure.alt)}" data-voz-texto="${esc(figure.alt)}" ${id === "portada" ? 'width="350" height="198"' : 'width="500" height="150"'}>
         <span>${icon("search")} Ampliar gráfico</span></button>
         ${chartEquations.length ? `<details class="chart-equations"><summary>Fórmulas del gráfico</summary>
-          <ul>${chartEquations.map(source => "<li>" + mathText(source) + "</li>").join("")}</ul></details>` : ""}` : "";
+          <ul>${chartEquations.map(source => "<li>" + mathText(source) + "</li>").join("")}</ul></details>` : ""}`;
+  }
+  function readingMarkup(a, practiceUrl) {
+    const table = a.table ? tableMarkup(a) : "";
+    const figure = a.figure ? figureMarkup(a.figure, a.id) : "";
     return `<div data-voz data-voz-audio="assets/audio/lectura/${encodeURIComponent(a.id)}.mp3"></div>
       <section class="read-card"><h2 class="study-subtitle">Ideas clave</h2>
       ${a.ideas.map((idea) => `<p data-voz-texto>${mathText(idea)}</p>`).join("")}${table}${figure}
@@ -727,6 +792,7 @@
             if (includeModels) {
               row.referencia = reference(q);
               if (q.explanation) row.explicacion = q.explanation;
+              if (q.optionReasons) row.motivos_descarte = q.optionReasons;
             }
             return row;
           }),
@@ -1030,6 +1096,7 @@
     let item;
     try { item = items.get(decodeURIComponent(id || "")); } catch {}
     const m = modules.find((module) => String(module.number) === id);
+    if (page === "graficos") return { page, m, type: ["graficos", "tablas"].includes(activity) ? activity : "todos" };
     if (page === "apartado" && item) {
       const practice = activity === "practica" && item.a.questions && !item.a.isFinal;
       const number = Number(step);
@@ -1051,8 +1118,11 @@
     closeNav();
     const route = locate();
     const changed = renderedRoute !== location.hash;
+    const galleryFocus = renderedPage === "graficos" && route.page === "graficos" &&
+      document.activeElement?.closest(".gallery-filters") && document.activeElement.id;
     if (changed || !navigation) {
       if (route.page === "modulo") modulePage(route.m, route.a, route.questionNumber);
+      else if (route.page === "graficos") graphicsPage(route.m, route.type);
       else if (route.page === "respuestas") review();
       else if (route.page === "pendientes") pendingPage();
       else if (route.page === "solucionario") solutionPage(route.m, route.a);
@@ -1064,7 +1134,7 @@
     document.title =
       (route.page === "solucionario" ? "Solucionario · " : "") +
       (route.questionNumber ? "Pregunta " + route.questionNumber + " · " : "") +
-      (route.a ? itemName(route.a) : route.m?.title ||
+      (route.page === "graficos" ? "Gráficos" : route.a ? itemName(route.a) : route.m?.title ||
         ({ respuestas: "Mis respuestas", pendientes: "Preguntas pendientes" }[route.page] || "Fundamentos de Economía")) + " · MBA Training";
     if (route.page === "modulo" && route.a?.questions) remember(route.a.id);
     sidebarModule = route.m || sidebarModule || items.get(lastId)?.m || modules[0];
@@ -1072,7 +1142,9 @@
     updateStudyTime();
     if (navigation) {
       const practiceHeading = route.questionNumber && main.querySelector("#current-question");
-      if (practiceHeading) {
+      if (galleryFocus) {
+        document.getElementById(galleryFocus)?.focus({ preventScroll: true });
+      } else if (practiceHeading) {
         practiceHeading.focus({ preventScroll: true });
         practiceHeading.scrollIntoView({ block: "start", behavior: "instant" });
       } else {
@@ -1173,11 +1245,12 @@
       return;
     }
     if (button.dataset.zoom) {
-      const fig = items.get(button.dataset.zoom).a.figure,
-        img = $("#figure-dialog img");
-      img.src = fig.src;
-      img.alt = fig.alt;
-      $("#figure-title").textContent = "Gráfico · " + button.dataset.zoom;
+      const source = button.querySelector("img"), img = $("#figure-dialog img");
+      img.src = source.src;
+      img.alt = source.alt;
+      const isCover = button.dataset.zoom === "portada";
+      img.classList.toggle("market-cover-chart", isCover);
+      $("#figure-title").textContent = isCover ? "Equilibrio de mercado" : "Gráfico · " + button.dataset.zoom;
       setFigureZoom(false);
       $("#figure-dialog").showModal();
       return;
