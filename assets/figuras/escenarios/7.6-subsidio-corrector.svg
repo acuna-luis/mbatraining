@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="540pt" height="324pt" viewBox="0 0 540 324" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <title>Una ayuda para proyectos de I+D</title>
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Una ayuda para proyectos de I+D</dc:title>
+    <dc:description>El coste marginal se cruza con el beneficio privado en tres proyectos y con el beneficio social en cuatro.</dc:description>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>MBA Training</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 324
+L 540 324
+L 540 0
+L 0 0
+z
+" style="fill: #f3f7f4"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 70.2 252.72
+L 496.8 252.72
+L 496.8 97.2
+L 70.2 97.2
+z
+" style="fill: #f3f7f4"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="madb38fa1b3" d="M 0 0
+L 0 3.5
+" style="stroke: #183c34; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#madb38fa1b3" x="70.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: middle" x="70.2" y="269.597969" transform="rotate(-0, 70.2, 269.597969)">1</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#madb38fa1b3" x="149.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: middle" x="149.2" y="269.597969" transform="rotate(-0, 149.2, 269.597969)">2</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#madb38fa1b3" x="228.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: middle" x="228.2" y="269.597969" transform="rotate(-0, 228.2, 269.597969)">3</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#madb38fa1b3" x="307.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: middle" x="307.2" y="269.597969" transform="rotate(-0, 307.2, 269.597969)">4</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#madb38fa1b3" x="386.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: middle" x="386.2" y="269.597969" transform="rotate(-0, 386.2, 269.597969)">5</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#madb38fa1b3" x="465.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: middle" x="465.2" y="269.597969" transform="rotate(-0, 465.2, 269.597969)">6</text>
+     </g>
+    </g>
+    <g id="text_7">
+     <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="283.5" y="284.899688" transform="rotate(-0, 283.5, 284.899688)">Número de proyectos</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_7">
+      <path d="M 70.2 242.621299
+L 496.8 242.621299
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke: #d5dfd8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <defs>
+       <path id="m4307a1cd76" d="M 0 0
+L -3.5 0
+" style="stroke: #183c34; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m4307a1cd76" x="70.2" y="242.621299" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: end" x="63.2" y="247.560283" transform="rotate(-0, 63.2, 247.560283)">2</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_9">
+      <path d="M 70.2 202.226494
+L 496.8 202.226494
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke: #d5dfd8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#m4307a1cd76" x="70.2" y="202.226494" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: end" x="63.2" y="207.165478" transform="rotate(-0, 63.2, 207.165478)">4</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_11">
+      <path d="M 70.2 161.831688
+L 496.8 161.831688
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke: #d5dfd8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m4307a1cd76" x="70.2" y="161.831688" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: end" x="63.2" y="166.770673" transform="rotate(-0, 63.2, 166.770673)">6</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_13">
+      <path d="M 70.2 121.436883
+L 496.8 121.436883
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke: #d5dfd8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#m4307a1cd76" x="70.2" y="121.436883" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <text style="fill: #183c34; font: 13px 'DejaVu Sans'; text-anchor: end" x="63.2" y="126.375867" transform="rotate(-0, 63.2, 126.375867)">8</text>
+     </g>
+    </g>
+    <g id="text_12">
+     <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="48.433125" y="174.96" transform="rotate(-90, 48.433125, 174.96)">Valor marginal</text>
+    </g>
+   </g>
+   <g id="line2d_15">
+    <path d="M 70.2 222.423896
+L 488.9 115.377662
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke: #183c34; stroke-width: 2.3; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_16">
+    <path d="M 70.2 141.634286
+L 488.9 248.680519
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke-dasharray: 8.88,3.84; stroke-dashoffset: 0; stroke: #a65226; stroke-width: 2.4"/>
+   </g>
+   <g id="line2d_17">
+    <path d="M 70.2 101.239481
+L 488.9 208.285714
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke: #176451; stroke-width: 2.5; stroke-linecap: square"/>
+   </g>
+   <g id="LineCollection_1">
+    <path d="M 228.2 252.72
+L 228.2 182.029091
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke-dasharray: 1.5,2.475; stroke-dashoffset: 0; stroke: #708177; stroke-width: 1.5"/>
+    <path d="M 307.2 252.72
+L 307.2 161.831688
+" clip-path="url(#pab64cc2121)" style="fill: none; stroke-dasharray: 1.5,2.475; stroke-dashoffset: 0; stroke: #708177; stroke-width: 1.5"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 70.2 252.72
+L 70.2 97.2
+" style="fill: none; stroke: #183c34; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 70.2 252.72
+L 496.8 252.72
+" style="fill: none; stroke: #183c34; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="PathCollection_1">
+    <defs>
+     <path id="C0_0_f25b894e33" d="M 0 3.535534
+C 0.937635 3.535534 1.836992 3.163008 2.5 2.5
+C 3.163008 1.836992 3.535534 0.937635 3.535534 -0
+C 3.535534 -0.937635 3.163008 -1.836992 2.5 -2.5
+C 1.836992 -3.163008 0.937635 -3.535534 0 -3.535534
+C -0.937635 -3.535534 -1.836992 -3.163008 -2.5 -2.5
+C -3.163008 -1.836992 -3.535534 -0.937635 -3.535534 0
+C -3.535534 0.937635 -3.163008 1.836992 -2.5 2.5
+C -1.836992 3.163008 -0.937635 3.535534 0 3.535534
+z
+"/>
+    </defs>
+    <g clip-path="url(#pab64cc2121)">
+     <use xlink:href="#C0_0_f25b894e33" x="228.2" y="182.029091" style="fill: #a65226; stroke: #a65226"/>
+    </g>
+    <g clip-path="url(#pab64cc2121)">
+     <use xlink:href="#C0_0_f25b894e33" x="307.2" y="161.831688" style="fill: #176451; stroke: #176451"/>
+    </g>
+   </g>
+  </g>
+  <g id="text_13">
+   <text style="fill: #183c34; font: 700 19px 'DejaVu Sans'; text-anchor: start" x="29.7" y="28.836" transform="rotate(-0, 29.7, 28.836)">Una ayuda para proyectos de I+D</text>
+  </g>
+  <g id="text_14">
+   <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: start" x="29.7" y="53.784" transform="rotate(-0, 29.7, 53.784)">Ejemplo · Cada proyecto aporta a terceros un beneficio de 2 unidades monetarias.</text>
+  </g>
+  <g id="legend_1">
+   <g id="line2d_18">
+    <path d="M 79.033188 298.987563
+L 87.443188 298.987563
+L 95.853188 298.987563
+" style="fill: none; stroke: #183c34; stroke-width: 2.3; stroke-linecap: square"/>
+   </g>
+   <g id="text_15">
+    <text style="fill: #183c34; font: 11.6px 'DejaVu Sans'; text-anchor: start" x="105.133188" y="303.047563" transform="rotate(-0, 105.133188, 303.047563)">Coste marginal</text>
+   </g>
+   <g id="line2d_19">
+    <path d="M 205.168688 298.987563
+L 213.578688 298.987563
+L 221.988688 298.987563
+" style="fill: none; stroke-dasharray: 8.88,3.84; stroke-dashoffset: 0; stroke: #a65226; stroke-width: 2.4"/>
+   </g>
+   <g id="text_16">
+    <text style="fill: #183c34; font: 11.6px 'DejaVu Sans'; text-anchor: start" x="231.268688" y="303.047563" transform="rotate(-0, 231.268688, 303.047563)">Beneficio privado</text>
+   </g>
+   <g id="line2d_20">
+    <path d="M 344.517313 298.987563
+L 352.927313 298.987563
+L 361.337312 298.987563
+" style="fill: none; stroke: #176451; stroke-width: 2.5; stroke-linecap: square"/>
+   </g>
+   <g id="text_17">
+    <text style="fill: #183c34; font: 11.6px 'DejaVu Sans'; text-anchor: start" x="370.617313" y="303.047563" transform="rotate(-0, 370.617313, 303.047563)">Beneficio social</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pab64cc2121">
+   <rect x="70.2" y="97.2" width="426.6" height="155.52"/>
+  </clipPath>
+ </defs>
+</svg>

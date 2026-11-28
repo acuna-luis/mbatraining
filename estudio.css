@@ -285,6 +285,20 @@
   color: var(--muted); font: 650 .8rem/1.4 var(--sans); letter-spacing: .025em;
 }
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: 1rem; }
+.visual-pair {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr));
+  gap: 1rem;
+}
+.reading-scenarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+  gap: 1rem;
+  margin-block: 1.5rem 1rem;
+}
+.reading-scenarios figure { min-width: 0; margin: 0; }
+.reading-scenarios figcaption { color: var(--ink); font-weight: 650; line-height: 1.4; }
 .visual-card {
   display: flex; flex-direction: column; min-width: 0; overflow-wrap: break-word;
   padding: clamp(1rem, 2vw, 1.45rem); background: white; border: 1px solid var(--line); border-radius: .85rem;

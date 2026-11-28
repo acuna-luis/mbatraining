@@ -10,7 +10,7 @@ Cuaderno interactivo de Fundamentos de Economía. Entra en el [aula por HTTPS](h
 
 Al final de **Temario**, abre **Preguntas pendientes** para ver tus respuestas incorrectas y las preguntas sin contestar, agrupadas por módulo. Toca el enunciado para abrir ese ejercicio. La flecha junto al título permite usar la misma lista desde la barra lateral. La lista se actualiza cada vez que cambias una respuesta.
 
-En **Gráficos** puedes repasar los gráficos y tablas del curso por módulo. Cada recurso incluye una pregunta de recuerdo, una explicación que puedes desplegar y un enlace a su lectura. Toca cualquier gráfico para ampliarlo.
+En **Gráficos** puedes repasar los gráficos y tablas del curso por módulo. Cada recurso incluye una pregunta de recuerdo, una explicación que puedes desplegar y un enlace a su lectura. Cuando un apartado ilustra dos escenarios, aparecen juntos en la galería y en la lectura para que puedas compararlos. Toca cualquier gráfico para ampliarlo.
 
 En los casos finales cualitativos, **Ver respuesta correcta** explica también por qué se descarta cada una de las otras tres opciones. Puedes consultar esos motivos en el solucionario o incluirlos al descargar las respuestas con referencias.
 

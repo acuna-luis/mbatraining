@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="540pt" height="324pt" viewBox="0 0 540 324" xmlns="http://www.w3.org/2000/svg" version="1.1" role="img" aria-labelledby="titulo descripcion">
+<title id="titulo">Exportaciones con un precio mundial superior al interno</title><desc id="descripcion">Sin comercio, la oferta y la demanda internas se cruzan en cincuenta toneladas diarias a cinco euros por kilo. La línea del precio mundial a siete euros corta la demanda en veinticinco toneladas y la oferta en setenta y cinco. Se exportan las cincuenta toneladas restantes.</desc>
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.5.1, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 324
+L 540 324
+L 540 0
+L 0 0
+z
+" style="fill: #f3f7f4"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 70.2 252.72
+L 507.6 252.72
+L 507.6 90.72
+L 70.2 90.72
+z
+" style="fill: #f3f7f4"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m184ad4a69d" d="M 0 0
+L 0 3
+" style="stroke: #183c34; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m184ad4a69d" x="70.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="70.2" y="268.338125" transform="rotate(-0, 70.2, 268.338125)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m184ad4a69d" x="179.55" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="179.55" y="268.338125" transform="rotate(-0, 179.55, 268.338125)">25</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m184ad4a69d" x="288.9" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="288.9" y="268.338125" transform="rotate(-0, 288.9, 268.338125)">50</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m184ad4a69d" x="398.25" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="398.25" y="268.338125" transform="rotate(-0, 398.25, 268.338125)">75</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#m184ad4a69d" x="507.6" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: middle" x="507.6" y="268.338125" transform="rotate(-0, 507.6, 268.338125)">100</text>
+     </g>
+    </g>
+    <g id="text_6">
+     <text style="fill: #183c34; font: 11px 'DejaVu Sans'; text-anchor: middle" x="288.9" y="283.632031" transform="rotate(-0, 288.9, 283.632031)">Tomates (toneladas por día)</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_6">
+      <path d="M 70.2 252.72
+L 507.6 252.72
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #cbdacf; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_7">
+      <defs>
+       <path id="m398d84f48e" d="M 0 0
+L -3 0
+" style="stroke: #183c34; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m398d84f48e" x="70.2" y="252.72" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: end" x="63.7" y="257.279063" transform="rotate(-0, 63.7, 257.279063)">0</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_8">
+      <path d="M 70.2 208.538182
+L 507.6 208.538182
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #cbdacf; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_9">
+      <g>
+       <use xlink:href="#m398d84f48e" x="70.2" y="208.538182" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: end" x="63.7" y="213.097244" transform="rotate(-0, 63.7, 213.097244)">3</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_10">
+      <path d="M 70.2 179.083636
+L 507.6 179.083636
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #cbdacf; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_11">
+      <g>
+       <use xlink:href="#m398d84f48e" x="70.2" y="179.083636" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: end" x="63.7" y="183.642699" transform="rotate(-0, 63.7, 183.642699)">5</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_12">
+      <path d="M 70.2 149.629091
+L 507.6 149.629091
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #cbdacf; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_13">
+      <g>
+       <use xlink:href="#m398d84f48e" x="70.2" y="149.629091" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: end" x="63.7" y="154.188153" transform="rotate(-0, 63.7, 154.188153)">7</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_14">
+      <path d="M 70.2 120.174545
+L 507.6 120.174545
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #cbdacf; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_15">
+      <g>
+       <use xlink:href="#m398d84f48e" x="70.2" y="120.174545" style="fill: #183c34; stroke: #183c34; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <text style="fill: #183c34; font: 12px 'DejaVu Sans'; text-anchor: end" x="63.7" y="124.733608" transform="rotate(-0, 63.7, 124.733608)">9</text>
+     </g>
+    </g>
+    <g id="text_12">
+     <text style="fill: #183c34; font: 11px 'DejaVu Sans'; text-anchor: middle" x="47.777344" y="171.72" transform="rotate(-90, 47.777344, 171.72)">Precio (€/kg)</text>
+    </g>
+   </g>
+   <g id="line2d_16">
+    <path d="M 70.2 237.992727
+L 507.6 120.174545
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #176451; stroke-width: 2.8; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_17">
+    <path d="M 70.2 120.174545
+L 507.6 237.992727
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke-dasharray: 14,8.4; stroke-dashoffset: 0; stroke: #a65226; stroke-width: 2.8"/>
+   </g>
+   <g id="LineCollection_1">
+    <path d="M 70.2 149.629091
+L 507.6 149.629091
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke: #183c34; stroke-width: 1.6"/>
+   </g>
+   <g id="LineCollection_2">
+    <path d="M 179.55 252.72
+L 179.55 149.629091
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke-dasharray: 1.725,3.45; stroke-dashoffset: 0; stroke: #49655a; stroke-width: 1.15"/>
+    <path d="M 398.25 252.72
+L 398.25 149.629091
+" clip-path="url(#p069c6cdee3)" style="fill: none; stroke-dasharray: 1.725,3.45; stroke-dashoffset: 0; stroke: #49655a; stroke-width: 1.15"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 70.2 252.72
+L 70.2 90.72
+" style="fill: none; stroke: #49655a; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 70.2 252.72
+L 507.6 252.72
+" style="fill: none; stroke: #49655a; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="PathCollection_1">
+    <defs>
+     <path id="m8dd3946d07" d="M 0 3.082207
+C 0.817411 3.082207 1.601453 2.757446 2.179449 2.179449
+C 2.757446 1.601453 3.082207 0.817411 3.082207 0
+C 3.082207 -0.817411 2.757446 -1.601453 2.179449 -2.179449
+C 1.601453 -2.757446 0.817411 -3.082207 0 -3.082207
+C -0.817411 -3.082207 -1.601453 -2.757446 -2.179449 -2.179449
+C -2.757446 -1.601453 -3.082207 -0.817411 -3.082207 0
+C -3.082207 0.817411 -2.757446 1.601453 -2.179449 2.179449
+C -1.601453 2.757446 -0.817411 3.082207 0 3.082207
+z
+" style="stroke: #183c34"/>
+    </defs>
+    <g clip-path="url(#p069c6cdee3)">
+     <use xlink:href="#m8dd3946d07" x="179.55" y="149.629091" style="fill: #183c34; stroke: #183c34"/>
+     <use xlink:href="#m8dd3946d07" x="398.25" y="149.629091" style="fill: #183c34; stroke: #183c34"/>
+    </g>
+   </g>
+   <g id="PathCollection_2">
+    <defs>
+     <path id="m70d434177b" d="M 0 3
+C 0.795609 3 1.55874 2.683901 2.12132 2.12132
+C 2.683901 1.55874 3 0.795609 3 0
+C 3 -0.795609 2.683901 -1.55874 2.12132 -2.12132
+C 1.55874 -2.683901 0.795609 -3 0 -3
+C -0.795609 -3 -1.55874 -2.683901 -2.12132 -2.12132
+C -2.683901 -1.55874 -3 -0.795609 -3 0
+C -3 0.795609 -2.683901 1.55874 -2.12132 2.12132
+C -1.55874 2.683901 -0.795609 3 0 3
+z
+" style="stroke: #183c34"/>
+    </defs>
+    <g clip-path="url(#p069c6cdee3)">
+     <use xlink:href="#m70d434177b" x="288.9" y="179.083636" style="fill: #183c34; stroke: #183c34"/>
+    </g>
+   </g>
+   <g id="patch_5">
+    <path d="M 181.115248 129.747273
+Q 288.9 129.747273 396.684752 129.747273
+" style="fill: none; stroke: #183c34; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 185.915248 132.147273
+L 181.115248 129.747273
+L 185.915248 127.347273
+" style="fill: none; stroke: #183c34; stroke-width: 1.4; stroke-linecap: round"/>
+    <path d="M 391.884752 127.347273
+L 396.684752 129.747273
+L 391.884752 132.147273
+" style="fill: none; stroke: #183c34; stroke-width: 1.4; stroke-linecap: round"/>
+   </g>
+   <g id="text_13">
+    <text style="fill: #183c34; font: 700 13px 'DejaVu Sans'; text-anchor: middle" x="288.9" y="124.592727" transform="rotate(-0, 288.9, 124.592727)">50 t exportadas</text>
+   </g>
+   <g id="text_14">
+    <text style="fill: #176451; font: 700 12px 'DejaVu Sans'; text-anchor: end" x="494.478" y="114.283636" transform="rotate(-0, 494.478, 114.283636)">Oferta</text>
+   </g>
+   <g id="text_15">
+    <text style="fill: #a65226; font: 700 12px 'DejaVu Sans'; text-anchor: end" x="494.478" y="206.770909" transform="rotate(-0, 494.478, 206.770909)">Demanda</text>
+   </g>
+   <g id="text_16">
+    <g id="patch_6">
+     <path d="M 252.471094 208.223878
+L 325.328906 208.223878
+L 325.328906 195.59794
+L 252.471094 195.59794
+z
+" style="fill: #f3f7f4"/>
+    </g>
+    <text style="fill: #183c34; font: 11px 'DejaVu Sans'; text-anchor: middle" x="288.9" y="204.946222" transform="rotate(-0, 288.9, 204.946222)">Sin comercio</text>
+   </g>
+  </g>
+  <g id="text_17">
+   <text style="fill: #183c34; font: 700 19px 'DejaVu Sans'; text-anchor: start" x="29.7" y="30.78" transform="rotate(-0, 29.7, 30.78)">Un país que exporta tomates</text>
+  </g>
+  <g id="text_18">
+   <text style="fill: #49655a; font: 12px 'DejaVu Sans'; text-anchor: start" x="29.7" y="57.996" transform="rotate(-0, 29.7, 57.996)">Ejemplo de un país pequeño que puede vender al precio mundial.</text>
+  </g>
+  <g id="text_19">
+   <text style="fill: #183c34; font: 11.5px 'DejaVu Sans'; text-anchor: start" x="29.7" y="307.152" transform="rotate(-0, 29.7, 307.152)">A 7 €/kg se producen 75 t y se consumen 25 t al día. Se exportan 50 t.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p069c6cdee3">
+   <rect x="70.2" y="90.72" width="437.4" height="162"/>
+  </clipPath>
+ </defs>
+</svg>

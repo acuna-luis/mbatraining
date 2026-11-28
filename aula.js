@@ -486,19 +486,23 @@
   const visuals = [];
   for (const m of modules) {
     for (const a of m.items) {
-      if (a.figure) visuals.push({m, a, key: a.id, type: "graficos", figure: a.figure});
+      const scenarios = window.ESCENARIOS[a.id];
+      if (a.figure) visuals.push({m, a, key: a.id, type: "graficos", figure: a.figure, title: scenarios?.originalTitle});
+      for (const scenario of scenarios?.figures || []) {
+        visuals.push({m, a, key: scenario.id, type: "graficos", title: scenario.title, recall: scenario,
+          figure: {src: "assets/figuras/escenarios/" + scenario.id + ".svg", alt: scenario.alt, width: 540, height: 324}});
+      }
       if (a.table) visuals.push({m, a, key: a.id, type: "tablas"});
       if (a.id === "4.7") visuals.push({m, a, key: "portada", type: "graficos", title: "Equilibrio de mercado",
-        figure: { src: "assets/mercado.svg", alt: "La oferta asciende y la demanda desciende. Desde su cruce, las líneas de puntos señalan el precio y la cantidad de equilibrio." }});
+        figure: { src: "assets/mercado.svg", width: 350, height: 198, alt: "La oferta asciende y la demanda desciende. Desde su cruce, las líneas de puntos señalan el precio y la cantidad de equilibrio." }});
     }
   }
-  function visualCard({a, key, type, title, figure}) {
-    const recall = window.REPASO_VISUAL[key];
+  function visualCard({a, key, type, title, figure, recall = window.REPASO_VISUAL[key]}) {
     const caption = type === "tablas" ? "Tabla" : key === "portada" ? "Gráfico de portada" : "Gráfico";
     return `<article class="visual-card">
       <div class="visual-heading"><p class="eyebrow">${caption} · ${esc(a.id)}</p>
         <h3>${mathText(title || a.title)}</h3></div>
-      ${figure ? figureMarkup(figure, key) : tableMarkup(a)}
+      ${figure ? figureMarkup(figure, key, title) : tableMarkup(a)}
       ${recall ? `<div class="visual-recall"><p>${mathText(recall.prompt)}</p>
         <details class="recall-answer"><summary>Ver explicación</summary><p>${mathText(recall.answer)}</p></details></div>` : ""}
       <a class="visual-source" href="${link(a)}">${icon("book")} Estudiar apartado ${esc(a.id)}</a>
@@ -516,10 +520,14 @@
     const count = [charts && charts + (charts === 1 ? " gráfico" : " gráficos"),
       tables && tables + (tables === 1 ? " tabla" : " tablas")].filter(Boolean).join(" · ") || "Sin resultados";
     const groups = (m ? [m] : modules).map(mod => {
-      const cards = selected.filter(v => v.m === mod);
-      return cards.length ? `<section class="gallery-module" aria-labelledby="gallery-m${mod.number}">
+      const cards = mod.items.map(a => {
+        const related = selected.filter(v => v.a === a);
+        const html = related.map(visualCard).join("");
+        return related.length > 1 ? `<div class="visual-pair" role="group" aria-label="Comparación del apartado ${esc(a.id)}">${html}</div>` : html;
+      }).join("");
+      return cards ? `<section class="gallery-module" aria-labelledby="gallery-m${mod.number}">
         <h2 id="gallery-m${mod.number}"><small>Módulo ${mod.number}</small>${esc(mod.title)}</h2>
-        <div class="gallery-grid">${cards.map(visualCard).join("")}</div></section>` : "";
+        <div class="gallery-grid">${cards}</div></section>` : "";
     }).join("");
     main.innerHTML = `<div class="visual-gallery"><header><h1 class="page-title">Gráficos</h1>
       <p>Observa cada gráfico o tabla, responde la pregunta y abre la explicación para comprobar tu idea.</p></header>
@@ -709,18 +717,21 @@
       <tbody>${a.table.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${mathText(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
       </table></div>`;
   }
-  function figureMarkup(figure, id) {
+  function figureMarkup(figure, id, title) {
     const chartEquations = [...new Set(Array.from(formulaMatches(figure.alt), (match) => match.source)
       .filter(source => /[=≈<>≤≥×÷/]| [−+] /.test(source)))];
-    return `<button type="button" class="figure-btn" data-zoom="${esc(id)}" aria-haspopup="dialog">
-        <img loading="lazy" src="${esc(figure.src)}" alt="${esc(figure.alt)}" data-voz-texto="${esc(figure.alt)}" ${id === "portada" ? 'width="350" height="198"' : 'width="500" height="150"'}>
+    return `<button type="button" class="figure-btn" data-zoom="${esc(id)}" data-figure-title="${esc(title || "Gráfico · " + id)}" aria-haspopup="dialog">
+        <img loading="lazy" src="${esc(figure.src)}" alt="${esc(figure.alt)}" data-voz-texto="${esc(figure.alt)}" width="${figure.width || 500}" height="${figure.height || 150}">
         <span>${icon("search")} Ampliar gráfico</span></button>
         ${chartEquations.length ? `<details class="chart-equations"><summary>Fórmulas del gráfico</summary>
           <ul>${chartEquations.map(source => "<li>" + mathText(source) + "</li>").join("")}</ul></details>` : ""}`;
   }
   function readingMarkup(a, practiceUrl) {
     const table = a.table ? tableMarkup(a) : "";
-    const figure = a.figure ? figureMarkup(a.figure, a.id) : "";
+    const figures = visuals.filter(v => v.a === a && v.figure && v.key !== "portada");
+    const figure = window.ESCENARIOS[a.id] ? `<div class="reading-scenarios">${figures.map(v =>
+      `<figure><figcaption data-voz-texto>${mathText(v.title)}</figcaption>${figureMarkup(v.figure, v.key, v.title)}</figure>`
+    ).join("")}</div>` : figures.map(v => figureMarkup(v.figure, v.key)).join("");
     return `<div data-voz data-voz-audio="assets/audio/lectura/${encodeURIComponent(a.id)}.mp3"></div>
       <section class="read-card"><h2 class="study-subtitle">Ideas clave</h2>
       ${a.ideas.map((idea) => `<p data-voz-texto>${mathText(idea)}</p>`).join("")}${table}${figure}
@@ -1250,7 +1261,7 @@
       img.alt = source.alt;
       const isCover = button.dataset.zoom === "portada";
       img.classList.toggle("market-cover-chart", isCover);
-      $("#figure-title").textContent = isCover ? "Equilibrio de mercado" : "Gráfico · " + button.dataset.zoom;
+      $("#figure-title").textContent = button.dataset.figureTitle;
       setFigureZoom(false);
       $("#figure-dialog").showModal();
       return;
